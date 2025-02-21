@@ -33,8 +33,6 @@ project_root/
 │── Scratches and Consoles
 ```
 
-*(Sorry for the dust on my monitor! 😆)*
-
 ## 3. Setting Up a Virtual Environment
 
 The professor suggests using **Conda** as a virtual environment, but if you don't want to spend time installing it, the local one with `venv` should be fine.
