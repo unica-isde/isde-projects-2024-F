@@ -66,10 +66,10 @@ python app/prepare_models.py
 After that, check if `uvicorn` is installed:
 
 ```
-pip list | grep uvicorn
+pip list 
 ```
 
-If it's missing, install it with:
+If it is not present on the output list, install uvicorn with:
 
 ```
 pip install uvicorn
