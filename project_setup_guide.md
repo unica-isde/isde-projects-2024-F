@@ -1,4 +1,4 @@
-# Brief Guide to Setting Up the Project
+![image](https://github.com/user-attachments/assets/90653c98-3e9e-40cc-a2c5-2dee562113cf)# Brief Guide to Setting Up the Project
 
 Since I found the project setting process a bit frustrating, I want to give you a brief guide on how to do it.
 
@@ -93,7 +93,8 @@ Just open your web browser and enter this IP to access the project.
 
 You will see the following page:
 
-![Project Web Interface](image.png)
+![Project Web Interface](![image](https://github.com/user-attachments/assets/a25641cc-1142-4751-b4ee-3f94ec246edf)
+)
 
 The project will be completely written in **JavaScript**, and we **do not** need to modify or run any `.py` files.
 
