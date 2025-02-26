@@ -8,7 +8,6 @@ from app.forms.classification_form import ClassificationForm
 from app.ml.classification_utils import classify_image
 from app.utils import list_images
 
-
 app = FastAPI()
 config = Configuration()
 
@@ -54,4 +53,15 @@ async def request_classification(request: Request):
             "image_id": image_id,
             "classification_scores": json.dumps(classification_scores),
         },
+    )
+
+
+# Histogram handling section
+# Since the histogram is computed client-side trough histogram_calculator.js and no data is sent to the server,
+# only a GET request is required to render the "histogram.html" page.
+@app.get("/histogram")
+def histogram_get(request: Request):
+    return templates.TemplateResponse(
+        "histogram.html",
+        {"request": request, "images": list_images()},
     )
