@@ -4,9 +4,9 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from app.config import Configuration
-from app.forms.classification_form import ClassificationForm
+from app.forms.classification_form import ClassificationForm, EditedImageForm
 from app.ml.classification_utils import classify_image
-from app.utils import list_images
+from app.utils import list_images, edit_image
 
 app = FastAPI()
 config = Configuration()
@@ -56,12 +56,74 @@ async def request_classification(request: Request):
     )
 
 
-# Histogram handling section
-# Since the histogram is computed client-side trough histogram_calculator.js and no data is sent to the server,
-# only a GET request is required to render the "histogram.html" page.
 @app.get("/histogram")
 def histogram_get(request: Request):
+    """This function is a FastAPI route handler for the histogram calculator.
+    It is responsible for rendering and returning the "histogram.html" template,
+    as all histogram-related functions are executed client-side."""
     return templates.TemplateResponse(
         "histogram.html",
         {"request": request, "images": list_images()},
+    )
+
+
+@app.get("/editor")
+def editor_get(request: Request):
+    """The editor_get function handles GET requests to the /editor endpoint and renders
+    the editor selection page. It serves an HTML template that provides the user
+    interface for selecting images,models, and image editing parameters.
+    The template is populated with a list of available images and models
+    retrieved from the system configuration."""
+    return templates.TemplateResponse(
+        "editor_select.html",
+        {
+            "request": request,
+            "images": list_images(),
+            "models": Configuration.models
+        },
+    )
+
+
+@app.post("/editor", response_class=HTMLResponse)
+async def request_edited_classification(request: Request):
+    """The request_edited_classification function handles POST requests to the /editor endpoint.
+    It collects all parameters from the form on the "editor_select.html" page and passes them
+    to the edit_image function to generate the edited image. The edited image is then classified,
+    and both the edited image and classification results are returned to the client
+    via the "editor_output.html" template."""
+    form = EditedImageForm(request)
+    await form.load_data()
+
+    if not form.is_valid():
+        return {"errors": form.errors}
+
+    print(form.image_id)
+
+    original_image_path = f"app/static/imagenet_subset/{form.image_id}"
+    edited_image_path = "app/static/imagenet_subset/edited.jpg"
+
+    color_value = form.color_value
+    brightness_value = form.brightness_value
+    contrast_value = form.contrast_value
+    sharpness_value = form.sharpness_value
+
+    edit_image(
+        original_image_path,
+        color_value,
+        brightness_value,
+        contrast_value,
+        sharpness_value,
+        edited_image_path
+    )
+
+    edited_image_id = "edited.jpg"
+    classification_scores = classify_image(form.model_id, edited_image_id)
+
+    return templates.TemplateResponse(
+        "editor_output.html",
+        {
+            "request": request,
+            "image_id": edited_image_id,
+            "classification_scores": json.dumps(classification_scores),
+        }
     )

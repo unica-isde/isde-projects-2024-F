@@ -1,11 +1,18 @@
 function displayImage() {
-
+    /**
+     * The displayImage function is responsible for updating an image on
+     * the histogram computation section of the webpage.
+     * It retrieves the selected image filename from the imageSelector
+     * dropdown menu, constructs the corresponding file path,
+     * and updates the src attribute of an image element (selectedImage).
+     * It also manages the visibility of UI sections by modifying the webpage
+     * after the image submission and triggers the histogram
+     * computation upon successful image loading.
+     */
     const imageSelector = document.getElementById("imageSelector");
     const selectedImage = imageSelector.value;
 
     const imagePath = `/static/imagenet_subset/${selectedImage}`;
-    console.log("Loading image from:", imagePath);
-
     const imageElement = document.getElementById("selectedImage");
     imageElement.src = imagePath;
 
@@ -13,18 +20,22 @@ function displayImage() {
     document.getElementById("imageHistogramSection").style.display = "block";
 
     imageElement.onload = function () {
-        console.log("Image loaded successfully.");
         computeHistogram();
     };
 
 
     imageElement.onerror = function () {
-        console.error("Failed to load image at", imagePath);
+        console.error("Image not found at: ", imagePath);
         alert("Error: Image not found! Check filename or static folder.");
     };
 }
 
 function computeHistogram() {
+    /**
+     * The computeHistogram function extracts pixel data from a selected image,
+     * processes the RGB values, and calculates the histogram of pixel intensities.
+     * It then calls plotHistogram to visualize the distribution of colors
+     */
     const imageElement = document.getElementById("selectedImage");
 
     if (!imageElement || !imageElement.src) {
@@ -57,6 +68,15 @@ function computeHistogram() {
 let histogramChart = null;
 
 function plotHistogram(red, green, blue) {
+    /**
+     * The plotHistogram function receives the RGB data extracted by computeHistogram
+     * and plots the histogram using canvas.
+     *
+     * Arguments:
+     *  - red   = Must be the red distribution array calculated by the computeHistogram function.
+     *  - green = Must be the green distribution array calculated by the computeHistogram function.
+     *  - blue  = Must be the blue distribution array calculated by the computeHistogram function.
+     */
     const canvasElement = document.getElementById("histogramOutput");
 
     if (!canvasElement) {
