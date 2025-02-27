@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <style>
+        .large-front-thumbnail {
+            position: relative;
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin-top: 20px;
+        }
+    </style>
+
+    <div class="container mt-4">
+
+        <div id="infoSection">
+            <h1 class="text-left">Histogram Calculator</h1>
+            <p class="text-left">
+                An image histogram represents the <b>distribution of pixel intensity values</b>
+                in an image. The histogram shows the number of pixels for each color
+                intensity (Red, Green, and Blue). This helps in analyzing contrast, brightness,
+                and color balance in an image.
+            </p>
+        </div>
+
+
+        <div class="row align-items-center mb-3">
+            <div class="col-md-6">
+                <h4>Select an Image:</h4>
+                <div class="d-flex">
+                    <select name="image_id" id="imageSelector" class="form-select w-75">
+                        {% for image in images %}
+                            <option value="{{ image }}">{{ image }}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn btn-dark ms-3" onclick="displayImage()" style="margin-left: 10px">Select Image
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="imageHistogramSection" style="display: none; margin-top: 10px;">
+            <div class="row">
+                <!-- Image Section -->
+                <div class="col-md-6">
+                    <div class="card p-3">
+                        <h5 class="text-left">Selected Image</h5>
+                        <img id="selectedImage" class="img-fluid large-front-thumbnail" src="" alt="Selected Image"/>
+                    </div>
+                </div>
+
+
+                <div class="col-md-6">
+                    <div class="card p-3">
+                        <h5 class="text-left">Histogram</h5>
+                        <canvas id="histogramOutput"
+                                style="width: 100%; height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col text-center">
+                    <a class="btn btn-secondary" href="/histogram" role="button">Back</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/histogram_calculator.js"></script>
+
+{% endblock %}
