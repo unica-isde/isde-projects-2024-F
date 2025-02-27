@@ -4,8 +4,6 @@ function displayImage() {
     const selectedImage = imageSelector.value;
 
     const imagePath = `/static/imagenet_subset/${selectedImage}`;
-    console.log("Loading image from:", imagePath);
-
     const imageElement = document.getElementById("selectedImage");
     imageElement.src = imagePath;
 
@@ -13,13 +11,12 @@ function displayImage() {
     document.getElementById("imageHistogramSection").style.display = "block";
 
     imageElement.onload = function () {
-        console.log("Image loaded successfully.");
         computeHistogram();
     };
 
 
     imageElement.onerror = function () {
-        console.error("Failed to load image at", imagePath);
+        console.error("Image not found at: ", imagePath);
         alert("Error: Image not found! Check filename or static folder.");
     };
 }
