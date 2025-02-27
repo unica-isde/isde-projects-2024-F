@@ -54,12 +54,16 @@
                 <div class="col-md-6">
                     <div class="card p-3">
                         <h5 class="text-left">Histogram</h5>
-                        <canvas id="histogram_output"
+                        <canvas id="histogramOutput"
                                 style="width: 100%; height: 300px;"></canvas>
                     </div>
-                    <a class="btn btn-secondary" href="/histogram" role="button" style="margin-top: 10px">Back</a>
-                    <a class="btn btn-secondary" onclick="downloadPLOT('histogram_output')" role="button"
-                       style="margin-top: 10px; background-color: darkslategray ">Download Plot</a>
+                    <a class="btn btn-secondary mt-3" href="/histogram" role="button">Back</a>
+                    <a class="btn btn-secondary mt-3" onclick="downloadPLOT('histogramOutput')" role="button"
+                       style=" padding-left: 10px; background-color: darkslategray ">Dowload Plot
+                    </a>
+                    <a class="btn btn-secondary mt-3" onclick="downloadHistogramJSON('histogramOutput')" role="button"
+                       style=" padding-left: 10px; background-color: darkslategray ">Dowload Results
+                    </a>
                 </div>
             </div>
         </div>

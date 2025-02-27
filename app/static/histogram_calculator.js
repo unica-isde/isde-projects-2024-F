@@ -4,7 +4,7 @@ function displayImage() {
      * the histogram computation section of the webpage.
      * It retrieves the selected image filename from the imageSelector
      * dropdown menu, constructs the corresponding file path,
-     * and updates the src attribute of an image element (selectedImage).
+     * and updates the src attribute of an image element.
      * It also manages the visibility of UI sections by modifying the webpage
      * after the image submission and triggers the histogram
      * computation upon successful image loading.
@@ -20,9 +20,11 @@ function displayImage() {
     document.getElementById("imageHistogramSection").style.display = "block";
 
     imageElement.onload = function () {
-        computeHistogram();
+        const histogramData = computeHistogram();
+        if (histogramData) {
+            plotHistogram(histogramData.red, histogramData.green, histogramData.blue);
+        }
     };
-
 
     imageElement.onerror = function () {
         console.error("Image not found at: ", imagePath);
@@ -32,15 +34,25 @@ function displayImage() {
 
 function computeHistogram() {
     /**
-     * The computeHistogram function extracts pixel data from a selected image,
-     * processes the RGB values, and calculates the histogram of pixel intensities.
-     * It then calls plotHistogram to visualize the distribution of colors
+     * The computeHistogram function analyzes the pixel data of a selected image
+     * and calculates the histogram distribution for the red, green, and blue
+     * color channels. It extracts pixel intensity values from the image, processes the RGB
+     * components, and counts the frequency of each intensity level for
+     * each color channel.
+     *
+     * The function then returns three arrays of 256 elements:
+     *  -  red[]   : Distribution of red intensity values.
+     *  -  green[] : Distribution of green intensity values.
+     *  -  blue[]  : Distribution of blue intensity values.
+     *
+     * These arrays can be used for further data manipulation, visualization,
+     * or exporting histogram data.
      */
     const imageElement = document.getElementById("selectedImage");
 
     if (!imageElement || !imageElement.src) {
         console.error("No image loaded.");
-        return;
+        return null;
     }
 
     const canvas = document.createElement("canvas");
@@ -62,7 +74,7 @@ function computeHistogram() {
         blue[data[i + 2]]++;
     }
 
-    plotHistogram(red, green, blue);
+    return {red, green, blue};
 }
 
 let histogramChart = null;

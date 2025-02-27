@@ -27,10 +27,10 @@ function downloadPLOT(elementID) {
     imageLink.click()
 }
 
-function downloadJSON(elementID) {
+function downloadClassificationJSON(elementID) {
 
     /**
-     * The downloadJSON function retrieves classification scores from the 'makeGraph'
+     * The downloadClassificationJSON function retrieves classification scores from the 'makeGraph'
      * script element and saves them as a JSON file. If no scores are available, an
      * alert notifies the user, and the function terminates.
      * The function extracts the scores using getAttribute and attempts to parse them as JSON.
@@ -59,3 +59,38 @@ function downloadJSON(elementID) {
     a.click();
 }
 
+function downloadHistogramJSON() {
+    /**
+     * The downloadHistogramJSON function generates and downloads a JSON file containing
+     * the histogram data for a histogram. It retrieves data from the
+     * computeHistogram function, which analyzes pixel intensities in the red, green,
+     * and blue channels. If no histogram data is available, an alert notifies the user,
+     * and the function terminates without proceeding.
+     * Otherwise, the function structures the histogram data into a well-formatted JSON object.
+     * The JSON content is then converted into a Blob object and assigned to a temporary
+     * anchor element. A simulated click on the anchor then triggers the download.
+     */
+
+    const histogramData = computeHistogram();
+
+    if (!histogramData) {
+        alert("No histogram data available. Please select an image first.");
+        return;
+    }
+
+    const jsonContent = `{
+    "red": ${JSON.stringify(histogramData.red)},
+    "green": ${JSON.stringify(histogramData.green)},
+    "blue": ${JSON.stringify(histogramData.blue)}
+}`;
+
+    const blob = new Blob([jsonContent], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "histogram_data.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
