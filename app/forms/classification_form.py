@@ -23,8 +23,11 @@ class ClassificationForm:
         return False
 
 
-# classification form for edited images
 class EditedImageForm:
+    """ The EditedImageForm class is used to collect all the parameters submitted
+     through the editor_select.html form and pass them to the backend for processing
+     and image editing."""
+
     def __init__(self, request: Request) -> None:
         self.request: Request = request
         self.errors: list = []
@@ -52,4 +55,3 @@ class EditedImageForm:
         if not self.errors:
             return True
         return False
-
