@@ -54,15 +54,18 @@
                 <div class="col-md-6">
                     <div class="card p-3">
                         <h5 class="text-left">Histogram</h5>
-                        <canvas id="histogramOutput"
+                        <canvas id="histogram_output"
                                 style="width: 100%; height: 300px;"></canvas>
                     </div>
                     <a class="btn btn-secondary" href="/histogram" role="button" style="margin-top: 10px">Back</a>
+                    <a class="btn btn-secondary" onclick="downloadPLOT('histogram_output')" role="button"
+                       style="margin-top: 10px; background-color: darkslategray ">Download Plot</a>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="/static/histogram_calculator.js"></script>
+    <script src="/static/downloads.js"></script>
 
 {% endblock %}
