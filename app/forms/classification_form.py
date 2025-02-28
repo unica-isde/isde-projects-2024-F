@@ -1,4 +1,4 @@
-from fastapi import Request
+from fastapi import Request, UploadFile
 
 
 class ClassificationForm:
@@ -55,3 +55,26 @@ class EditedImageForm:
         if not self.errors:
             return True
         return False
+
+
+class UploadedImageForm:
+    """
+    The UploadedImageForm class is used to collect and validate the file and model ID
+    submitted through the form in the classification_upload.html template.
+
+    This form is designed to handle the input from the user for the image upload process.
+    It ensures that a file is uploads and a valid model ID is provided before proceeding
+    with image classification.
+    """
+
+    def __init__(self, file: UploadFile, model_id: str) -> None:
+        self.file = file
+        self.model_id = model_id
+        self.errors = []
+
+    def is_valid(self):
+        if not self.file:
+            self.errors.append("An image file is required")
+        if not self.model_id:
+            self.errors.append("A valid model ID is required")
+        return not self.errors

@@ -8,6 +8,7 @@ class Configuration:
 
     # classification
     image_folder_path = os.path.join(project_root, "static/imagenet_subset")
+    upload_folder_path = os.path.join(project_root, "static/uploads")
     models = (
         "resnet18",
         "alexnet",

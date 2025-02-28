@@ -1,11 +1,11 @@
 import json
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, UploadFile, Form, File
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from app.config import Configuration
-from app.forms.classification_form import ClassificationForm, EditedImageForm
-from app.ml.classification_utils import classify_image
+from app.forms.classification_form import ClassificationForm, EditedImageForm, UploadedImageForm
+from app.ml.classification_utils import classify_image, store_uploaded_image
 from app.utils import list_images, edit_image
 
 app = FastAPI()
@@ -126,4 +126,37 @@ async def request_edited_classification(request: Request):
             "image_id": edited_image_id,
             "classification_scores": json.dumps(classification_scores),
         }
+    )
+
+
+@app.get("/upload")
+def upload(request: Request):
+    return templates.TemplateResponse(
+        "classification_upload.html",
+        {
+            "request": request,
+            "models": Configuration.models
+        },
+    )
+
+@app.post("/upload")
+async def upload(request: Request, file: UploadFile = File(...), model_id: str = Form(...)):
+    print("PROVA DEBUG")
+    form = UploadedImageForm(file, model_id)
+
+    if not form.is_valid():
+        return {"errors": form.errors}
+
+    # Store the uploads image and classify it
+    filename = store_uploaded_image(file)
+    classification_scores = classify_image(model_id=model_id, img_id=filename)
+
+    return templates.TemplateResponse(
+        "classification_upload_output.html",
+        {
+            "request": request,
+            "image_id": filename,
+            "image_path": f"/static/uploads/{filename}",
+            "classification_scores": json.dumps(classification_scores),
+        },
     )
