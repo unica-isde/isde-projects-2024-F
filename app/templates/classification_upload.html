@@ -17,7 +17,7 @@
 
             <div class="mb-3">
                 <h4 class="text-left">Upload an Image:</h4>
-                <input type="file" name="file" class="form-control w-50" id="imageUpload">
+                <input type="file" name="file" class="form-control w-50 h-50" id="imageUpload" style="padding-bottom: 10px">
             </div>
 
             <button type="submit" class="btn btn-dark">Submit</button>
@@ -29,4 +29,5 @@
         document.querySelector("select[name='image_id']").disabled = this.files.length > 0;
     });
 </script>
+
 {% endblock %}
