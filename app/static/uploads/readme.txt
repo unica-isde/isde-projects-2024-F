@@ -1,0 +1,1 @@
+this folder should contain all the uploaded images.

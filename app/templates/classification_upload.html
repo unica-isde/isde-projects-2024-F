@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <div class="container mt-4">
+        <h1 class="text-left">Select Model and Upload Image</h1>
+
+         <form method="post" enctype="multipart/form-data">
+            <div class="mb-3">
+                <h4 class="text-left">Model:</h4>
+                <select name="model_id" class="form-select w-50">
+                    {% for model in models %}
+                        <option value="{{ model }}">{{ model }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <h4 class="text-left">Upload an Image:</h4>
+                <input type="file" name="file" class="form-control w-50 h-50" id="imageUpload" style="padding-bottom: 10px">
+            </div>
+
+            <button type="submit" class="btn btn-dark">Submit</button>
+        </form>
+    </div>
+
+<script>
+    document.getElementById("imageUpload").addEventListener("change", function() {
+        document.querySelector("select[name='image_id']").disabled = this.files.length > 0;
+    });
+</script>
+
+{% endblock %}

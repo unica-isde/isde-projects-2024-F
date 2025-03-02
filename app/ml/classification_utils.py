@@ -8,7 +8,9 @@ import logging
 import os
 import torch
 from PIL import Image
+
 from torchvision import transforms
+from fastapi import UploadFile
 
 from app.config import Configuration
 
@@ -17,12 +19,19 @@ conf = Configuration()
 
 
 def fetch_image(image_id):
-    """Gets the image from the specified ID. It returns only images
-    downloaded in the folder specified in the configuration object."""
-    image_path = os.path.join(conf.image_folder_path, image_id)
-    img = Image.open(image_path)
-    return img
+    """Modified function to get the image from the dataset or upload folder."""
+    if os.path.exists(os.path.join(conf.upload_folder_path, image_id)):
+        print("debug path exist")
+        return Image.open(os.path.join(conf.upload_folder_path, image_id))
+    return Image.open(os.path.join(conf.image_folder_path, image_id))
 
+
+def store_uploaded_image(file: UploadFile) -> str:
+    """Saves uploads image and returns its path."""
+    file_path = os.path.join(conf.upload_folder_path, file.filename)
+    with open(file_path, "wb") as f:
+        f.write(file.file.read())
+    return file.filename
 
 def get_labels():
     """Returns the labels of Imagenet dataset as a list, where
