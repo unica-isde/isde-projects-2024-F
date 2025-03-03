@@ -89,7 +89,7 @@ function plotHistogram(red, green, blue) {
      *  - green = Must be the green distribution array calculated by the computeHistogram function.
      *  - blue  = Must be the blue distribution array calculated by the computeHistogram function.
      */
-    const canvasElement = document.getElementById("histogramOutput");
+    const canvasElement = document.getElementById("histogram_output");
 
     if (!canvasElement) {
         console.error("Canvas element not found.");
