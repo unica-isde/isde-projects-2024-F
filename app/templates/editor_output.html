@@ -17,10 +17,20 @@
             <div class="col">
                 <div class="card p-3">
                     <h5 class="text-left">Selected Image</h5>
-                    <img class="large-front-thumbnail"
+                    <img class="large-front-thumbnail" id="selectedImage"
                          src="{{ 'static/imagenet_subset/'+image_id }} "
                          alt="{{ image_id }}"/>
                 </div>
+                <a class="btn btn-secondary mt-3" href="/editor" role="button">Back</a>
+                <a class="btn btn-secondary mt-3"
+                   onclick="downloadPLOT('classificationOutput'); downloadPLOT('histogram_output')" role="button"
+                   style=" padding-left: 10px; background-color: darkslategray ">Dowload Plot
+                </a>
+                <a class="btn btn-secondary mt-3" onclick="downloadClassificationJSON('classificationOutput'); downloadHistogramJSON()"
+                   role="button"
+                   style=" padding-left: 10px; background-color: darkslategray ">Dowload Results
+                </a>
+
             </div>
 
             <div class="col">
@@ -32,17 +42,25 @@
                         <h2 id="waitText"></h2>
                     </div>
                 </div>
-                <a class="btn btn-secondary mt-3" href="/editor" role="button">Back</a>
-                <a class="btn btn-secondary mt-3" onclick="downloadPLOT('classificationOutput')" role="button"
-                   style=" padding-left: 10px; background-color: darkslategray ">Dowload Plot
-                </a>
-                <a class="btn btn-secondary mt-3" onclick="downloadClassificationJSON('classificationOutput')" role="button"
-                   style=" padding-left: 10px; background-color: darkslategray ">Dowload Results
-                </a>
+                <div class="card p-3" style="margin-top: 10px">
+                    <h5 class="text-left">Histogram Output</h5>
+                    <canvas id="histogram_output"
+                            style="width: 100%; height: 300px; margin: auto; padding: 20px;"></canvas>
+                    <div class="align-items-center">
+                        <h2 id="waitText"></h2>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script src="{{ 'static/graph.js' }}" id="makeGraph" classification_scores="{{ classification_scores }}"></script>
     <script src="/static/downloads.js"></script>
+    <script src="/static/histogram_calculator.js"></script>
+    <script>
+    var current_bar = document.getElementById("editorbar");
+    if (current_bar) {
+        current_bar.classList.add('active');
+    }
+</script>
 {% endblock %}

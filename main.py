@@ -97,8 +97,6 @@ async def request_edited_classification(request: Request):
     if not form.is_valid():
         return {"errors": form.errors}
 
-    print(form.image_id)
-
     original_image_path = f"app/static/imagenet_subset/{form.image_id}"
     edited_image_path = "app/static/imagenet_subset/edited.jpg"
 
@@ -139,17 +137,36 @@ def upload(request: Request):
         },
     )
 
+
 @app.post("/upload")
-async def upload(request: Request, file: UploadFile = File(...), model_id: str = Form(...)):
-    print("PROVA DEBUG")
-    form = UploadedImageForm(file, model_id)
+async def upload(request: Request, file: UploadFile = File(...)):
+    form = UploadedImageForm(file=file, request=request)
+    await form.load_data()
 
     if not form.is_valid():
         return {"errors": form.errors}
 
-    # Store the uploads image and classify it
-    filename = store_uploaded_image(file)
-    classification_scores = classify_image(model_id=model_id, img_id=filename)
+    # Store uploaded file and retrieve the filename
+    filename = store_uploaded_image(form.file)
+
+    # Ensure image_id is correctly assigned (fallback to filename if empty)
+    image_id = filename # Use filename as default
+
+    original_image_path = f"app/static/uploads/{image_id}"
+    edited_image_path = "app/static/imagenet_subset/edited.jpg"
+
+    # Apply image transformations
+    edit_image(
+        original_image_path,
+        form.color_value,
+        form.brightness_value,
+        form.contrast_value,
+        form.sharpness_value,
+        edited_image_path
+    )
+
+    # Classify image
+    classification_scores = classify_image(model_id=form.model_id, img_id=filename)
 
     return templates.TemplateResponse(
         "classification_upload_output.html",

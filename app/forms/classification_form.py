@@ -57,24 +57,54 @@ class EditedImageForm:
         return False
 
 
+from fastapi import Request, UploadFile
+from typing import Optional
+
+
 class UploadedImageForm:
     """
-    The UploadedImageForm class is used to collect and validate the file and model ID
-    submitted through the form in the classification_upload.html template.
+    The UploadedImageForm class is used to collect and validate the file, model ID,
+    and additional image editing parameters submitted through the form in the
+    classification_upload.html and editor_select.html templates.
 
-    This form is designed to handle the input from the user for the image upload process.
-    It ensures that a file is uploads and a valid model ID is provided before proceeding
-    with image classification.
+    This form ensures that a file is uploaded, a valid model ID is provided, and any
+    optional image editing parameters are properly handled before proceeding with
+    image classification or editing.
     """
 
-    def __init__(self, file: UploadFile, model_id: str) -> None:
-        self.file = file
-        self.model_id = model_id
-        self.errors = []
+    def __init__(self, file: Optional[UploadFile], request: Request) -> None:
+        self.request: Request = request
+        self.file: Optional[UploadFile] = file
+        self.errors: list = []
+        self.model_id: str = ""
+        self.image_id: str = ""
+        self.color_value: int = 0
+        self.brightness_value: int = 0
+        self.contrast_value: int = 0
+        self.sharpness_value: int = 0
+
+    async def load_data(self):
+        """Loads form data from the request."""
+        form = await self.request.form()
+
+        self.model_id = form.get("model_id", "").strip()
+        self.color_value = self.safe_int(form.get("color_value", 0))
+        self.brightness_value = self.safe_int(form.get("brightness_value", 0))
+        self.contrast_value = self.safe_int(form.get("contrast_value", 0))
+        self.sharpness_value = self.safe_int(form.get("sharpness_value", 0))
+
+    def safe_int(self, value, default=0):
+        """Safely converts a value to an integer, returning a default if conversion fails."""
+        try:
+            return int(value)
+        except (ValueError, TypeError):
+            return default
 
     def is_valid(self):
+        """Validates the form fields."""
         if not self.file:
-            self.errors.append("An image file is required")
+            self.errors.append("A valid image file is required.")
         if not self.model_id:
-            self.errors.append("A valid model ID is required")
-        return not self.errors
+            self.errors.append("A valid model ID is required.")
+
+        return not bool(self.errors)  # Returns True if no errors exist

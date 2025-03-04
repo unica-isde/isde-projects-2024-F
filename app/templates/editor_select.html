@@ -72,5 +72,10 @@
     </div>
 
     <script src="/static/slider_and_values_sync.js"></script>
-
+    <script>
+    var current_bar = document.getElementById("editorbar");
+    if (current_bar) {
+        current_bar.classList.add('active');
+    }
+</script>
 {% endblock %}
