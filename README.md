@@ -37,7 +37,17 @@ the image directory can be found in the `config.py` file.
 python app/prepare_images.py
 python app/prepare_models.py
 ```
+or
 
+```bash
+python -m app.prepare_images.py
+python -m app.prepare_models.py
+```
+Since, for some reason, Sphinx was not satisfied with
+the `from config import Configuration` statement in those files,
+we had to modify it to `from .config import Configuration`.
+However, this change may cause issues when running the previous commands,
+so the use of the other two is recommended.
 ## Usage
 
 ### Run locally
