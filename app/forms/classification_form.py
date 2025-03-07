@@ -1,67 +1,6 @@
 from fastapi import Request, UploadFile
 
 
-class ClassificationForm:
-    """
-    The ClassificationForm class is responsible for handling and validating
-    image classification form data submitted through an HTTP request.
-
-    This form validates a concrete image before proceeding with classification.
-    """
-    def __init__(self, request: Request) -> None:
-
-        """"
-        Initializes a new instance of the form class.
-
-        This constructor sets up the initial attributes for handling a classification form request.
-        It initializes the request object, and two string attributes (image_id and model_id) that will
-        hold the necessary information for image classification.
-        Parameters:
-        -----------
-        request : Request --> The HTTP request containing form data.
-
-        """
-        self.request: Request = request
-        self.errors: list = []
-        self.image_id: str = ""
-        self.model_id: str = ""
-
-    async def load_data(self):
-        """
-        Asynchronously loads form data from the request.
-
-        This method extracts the form data submitted in the HTTP request and assigns the values
-        to the corresponding attributes (image_id and model_id). It ensures that the form
-        fields are properly retrieved and stored for further validation and processing.
-
-        """
-        form = await self.request.form()
-        self.image_id = form.get("image_id")
-        self.model_id = form.get("model_id")
-
-    def is_valid(self):
-        """
-        Validates the form data.
-
-        This method checks if the required fields are present and correctly formatted.
-        If any of these fields are missing or not of type str, an error message
-        is added to the errors list.
-
-        Outputs:
-        --------
-        bool
-            - `True` --> `image_id` and `model_id` are valid.
-            - `False` --> errors are stored in `errors` list.
-        """
-        if not self.image_id or not isinstance(self.image_id, str):
-            self.errors.append("A valid image id is required")
-        if not self.model_id or not isinstance(self.model_id, str):
-            self.errors.append("A valid model id is required")
-        if not self.errors:
-            return True
-        return False
-
-
 class EditedImageForm:
     """
     The EditedImageForm class is used to collect all the parameters submitted
@@ -231,4 +170,4 @@ class UploadedImageForm:
         if not self.model_id:
             self.errors.append("A valid model ID is required.")
 
-        return not bool(self.errors)  # Returns True if no errors exist
+        return not bool(self.errors)

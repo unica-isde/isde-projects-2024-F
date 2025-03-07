@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from app.config import Configuration
-from app.forms.classification_form import ClassificationForm, EditedImageForm, UploadedImageForm
+from app.forms.classification_form import EditedImageForm, UploadedImageForm
 from app.ml.classification_utils import classify_image, store_uploaded_image
 from app.utils import list_images, edit_image
 
@@ -57,91 +57,6 @@ def home(request: Request):
 
     """
     return templates.TemplateResponse("home.html", {"request": request})
-
-
-@app.get("/classifications")
-def create_classify(request: Request):
-    """
-    Serves the classification selection page.
-
-    This function handles rendering the classification selection page, where users
-    can choose an image and a model for classification.
-
-    Inputs:
-    -------
-    request : Request --> The HTTP request containing data about the client's request.
-
-
-    Outputs:
-    --------
-    TemplateResponse --> Returns an HTML response generated from the "classification_select.html"
-        template with the request object, list of available images, and available models.
-
-
-    """
-    return templates.TemplateResponse(
-        "classification_select.html",
-        {"request": request, "images": list_images(), "models": Configuration.models},
-    )
-
-
-@app.post("/classifications")
-async def request_classification(request: Request):
-    """
-    Handles the classification request and returns the classification results.
-
-    This function processes a classification request by extracting form data from
-    the HTTP request, validating and retrieving the selected image and model,
-    performing image classification using the specified model, and returning the
-    classification results in a rendered HTML template.
-
-    Inputs:
-    -------
-    request : Request --> The HTTP request object containing form data.
-
-
-    Outputs:
-    --------
-    TemplateResponse -->Returns an HTML response generated from the "classification_output.html" template,
-        containing the classification results.
-
-
-    """
-    form = ClassificationForm(request)
-    await form.load_data()
-    image_id = form.image_id
-    model_id = form.model_id
-    classification_scores = classify_image(model_id=model_id, img_id=image_id)
-    return templates.TemplateResponse(
-        "classification_output.html",
-        {
-            "request": request,
-            "image_id": image_id,
-            "classification_scores": json.dumps(classification_scores),
-        },
-    )
-
-
-@app.get("/histogram")
-def histogram_get(request: Request):
-    """
-    This function is a FastAPI route handler for the histogram calculator.
-    It is responsible for rendering and returning the "histogram.html" template,
-    as all histogram-related functions are executed client-side.
-
-    Inputs:
-    -------
-    request : Request --> The HTTP request object.
-
-    Returns:
-    --------
-    TemplateResponse --> The rendered "histogram.html" page with the list of available images.
-
-    """
-    return templates.TemplateResponse(
-        "histogram.html",
-        {"request": request, "images": list_images()},
-    )
 
 
 @app.get("/editor")
@@ -274,16 +189,12 @@ async def upload(request: Request, file: UploadFile = File(...)):
     if not form.is_valid():
         return {"errors": form.errors}
 
-    # Store uploaded file and retrieve the filename
     filename = store_uploaded_image(form.file)
 
-    # Ensure image_id is correctly assigned (fallback to filename if empty)
-    image_id = filename # Use filename as default
-
+    image_id = filename
     original_image_path = f"app/static/uploads/{image_id}"
     edited_image_path = "app/static/imagenet_subset/edited.jpg"
 
-    # Apply image transformations
     edit_image(
         original_image_path,
         form.color_value,
@@ -293,7 +204,6 @@ async def upload(request: Request, file: UploadFile = File(...)):
         edited_image_path
     )
 
-    # Classify image
     classification_scores = classify_image(model_id=form.model_id, img_id=filename)
 
     return templates.TemplateResponse(
