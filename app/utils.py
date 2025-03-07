@@ -7,7 +7,14 @@ conf = Configuration()
 
 
 def list_images():
-    """Returns the list of available images."""
+    """
+    Returns the list of available images.
+
+     Outputs:
+    --------
+    - Returns a list of image filenames (as strings) with a `.JPEG` extension.
+
+    """
     img_names = filter(
         lambda x: x.endswith(".JPEG"), os.listdir(conf.image_folder_path)
     )

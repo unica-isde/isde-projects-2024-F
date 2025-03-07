@@ -12,7 +12,14 @@ from config import Configuration
 
 
 def prepare_images():
-    """Downloads a subset of the Imagenet Dataset."""
+    """
+    Downloads a subset of the Imagenet Dataset if not already present.
+
+    This function checks if the specified image folder exists. If not, it downloads a ZIP
+    file containing a subset of the Imagenet dataset from a given URL. The ZIP file is
+    extracted, and the images are stored in the configured image folder.
+
+    """
     img_folder = Configuration().image_folder_path
     if not os.path.exists(img_folder):
         zip_url = (
@@ -32,8 +39,16 @@ def prepare_images():
 
 
 def prepare_labels():
-    """Saves a JSON file containing Imagenet labels as a list where
-    the index is the label ID of the class."""
+    """
+    Saves a JSON file containing Imagenet labels as a list where
+    the index is the label ID of the class.
+
+    This function retrieves a JSON file containing simplified ImageNet labels
+    where the index of the list corresponds to the label ID of the class.
+    The labels are downloaded from a public URL and saved to the specified
+    image folder as "imagenet_labels.json".
+
+    """
     img_folder = Configuration().image_folder_path
     labels_path = os.path.join(img_folder, "imagenet_labels.json")
     imagenet_labels_path = (

@@ -19,7 +19,23 @@ conf = Configuration()
 
 
 def fetch_image(image_id):
-    """Modified function to get the image from the dataset or upload folder."""
+    """
+    Modified function to get the image from the dataset or upload folder
+
+    This function try to get an image using the provided image ID. It first checks if
+    the image exists in the upload folder. If exists, it opens and returns the image.
+    Otherwise, it attempts to fetch the image from the default image folder.
+
+
+    Inputs:
+    -------
+    image_id : str --> The filename or identifier of the image to be found.
+
+    Outputs:
+    --------
+    Image.Image --> The opened image file as a PIL Image object.
+
+    """
     if os.path.exists(os.path.join(conf.upload_folder_path, image_id)):
         print("debug path exist")
         return Image.open(os.path.join(conf.upload_folder_path, image_id))
@@ -27,15 +43,38 @@ def fetch_image(image_id):
 
 
 def store_uploaded_image(file: UploadFile) -> str:
-    """Saves uploads image and returns its path."""
+    """
+    Saves an uploaded image to the designated upload folder and returns its filename.
+
+    This function takes an uploaded image file, saves it to the directory,
+    and returns the name of the saved file.
+
+    Inputs:
+    -------
+    file : UploadFile --> The uploaded file containing the image data.
+
+    Outputs:
+    --------
+    str --> The filename of the saved image.
+
+    """
     file_path = os.path.join(conf.upload_folder_path, file.filename)
     with open(file_path, "wb") as f:
         f.write(file.file.read())
     return file.filename
 
 def get_labels():
-    """Returns the labels of Imagenet dataset as a list, where
-    the index of the list corresponds to the output class."""
+    """
+    Returns the labels of Imagenet dataset as a list, where
+    the index of the list corresponds to the output class.
+
+    This function loads the Imagenet class labels from a JSON file and returns them as a list.
+
+    Outputs:
+    --------
+    list --> A list of ImageNet labels where each index represents a class.
+
+    """
     labels_path = os.path.join(conf.image_folder_path, "imagenet_labels.json")
     with open(labels_path) as f:
         labels = json.load(f)
@@ -43,9 +82,20 @@ def get_labels():
 
 
 def get_model(model_id):
-    """Imports a pretrained model from the ones that are specified in
+    """
+    Imports a pretrained model from the ones that are specified in
     the configuration file. This is needed as we want to pre-download the
-    specified model in order to avoid unnecessary waits for the user."""
+    specified model in order to avoid unnecessary waits for the user
+
+    Inputs:
+    -------
+    model_id : str --> The identifier of the model to be loaded (must be in `conf.models`).
+
+    Outputs:
+    --------
+    torch.nn.Module --> The loaded PyTorch model with default pretrained weights.
+
+    """
     if model_id in conf.models:
         try:
             module = importlib.import_module("torchvision.models")
@@ -57,9 +107,22 @@ def get_model(model_id):
 
 
 def classify_image(model_id, img_id):
-    """Returns the top-5 classification score output from the
+    """
+    Returns the top-5 classification score output from the
     model specified in model_id when it is fed with the
-    image corresponding to img_id."""
+    image corresponding to img_id.
+
+    Inputs:
+    -------
+    model_id : str --> The identifier of the pretrained model to be used for classification.
+    img_id : str --> The identifier (filename) of the image to be classified.
+
+    Outputs:
+    --------
+    list --> A list of the top-5 classification results, where each item is a tuple:
+             (label_name: str, confidence_score: float)
+
+    """
     img = fetch_image(img_id)
     model = get_model(model_id)
     model.eval()

@@ -4,7 +4,15 @@ project_root = os.path.dirname(os.path.abspath(__file__))
 
 
 class Configuration:
-    """Contains the configuration information for the app."""
+    """
+        Contains the configuration information for the app.
+
+        This class holds the paths and model configurations required by the app
+        for image classification and file management. It provides default values
+        for the image folder path, upload folder path, and a list of pre-defined models
+        used for image classification tasks.
+
+    """
 
     # classification
     image_folder_path = os.path.join(project_root, "static/imagenet_subset")

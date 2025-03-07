@@ -7,6 +7,18 @@ $(document).ready(function () {
 });
 
 function makeGraph(results) {
+    /**
+    * Generates a horizontal bar chart displaying classification results.
+    *
+    * This function takes classification results as input, parses them if they are in JSON format,
+    * and visualizes them using Chart.js.
+    *
+    * Inputs:
+    * -------
+    * results : string | array --> A JSON string or an array containing classification results.
+    *
+    *
+    */
     console.log(results);
     results = JSON.parse(results);
     var ctx = document.getElementById("classificationOutput").getContext('2d');

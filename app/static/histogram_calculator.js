@@ -18,8 +18,11 @@ $(document).ready(function () {
 
 function processHistogram() {
     /**
-     * Process and plot the histogram for the loaded image.
-     */
+    * Processes and plots the histogram for the loaded image.
+    *
+    * This function gets the histogram data of an image using `computeHistogram()`
+    * and then visualizes it using `plotHistogram()`.
+    */
     var histogramData = computeHistogram();
     if (histogramData) {
         plotHistogram("histogram_output", histogramData.red, histogramData.green, histogramData.blue);
@@ -27,6 +30,18 @@ function processHistogram() {
 }
 
 function computeHistogram() {
+    /**
+    * Computes the histogram of an image.
+    *
+    * This function extracts pixel data from an image element, processes it to count the
+    * intensity distribution for each color red, green, and blue, and returns
+    * the computed histogram data.
+    *
+    * Outputs:
+    * --------
+    * - An object containing three arrays (`red`, `green`, and `blue`) or null if no valid image is found.
+    *
+    */
     var imageElement = document.getElementById("selectedImage");
 
     if (!imageElement || !imageElement.src) {
@@ -61,8 +76,21 @@ function computeHistogram() {
 
 function plotHistogram(canvasId, red, green, blue) {
     /**
-     * Helper function to plot histogram data into a specified canvas.
-     */
+    * Helper function to plot histogram data into a specified canvas.
+    *
+    *
+    * Inputs:
+    * -------
+    * canvasId : string  --> The ID of the `<canvas>` element where the histogram should be displayed.
+    * red      : array   --> An array of 256 integers representing the pixel count for each intensity level (0-255) in the red channel.
+    * green    : array   --> An array of 256 integers representing the pixel count for each intensity level (0-255) in the green channel.
+    * blue     : array   --> An array of 256 integers representing the pixel count for each intensity level (0-255) in the blue channel.
+    *
+    * Outputs:
+    * --------
+    * - The histogram
+    *
+    */
     var canvasElement = document.getElementById(canvasId);
     if (!canvasElement) {
         console.error(`Canvas element ${canvasId} not found.`);

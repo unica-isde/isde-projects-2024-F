@@ -17,8 +17,19 @@ templates = Jinja2Templates(directory="app/templates")
 
 @app.get("/info")
 def info() -> dict[str, list[str]]:
-    """Returns a dictionary with the list of models and
-    the list of available image files."""
+    """
+    Returns a dictionary containing available models and images.
+
+    This function compiles a list of preconfigured model names and available
+    image files, returning them in a structured dictionary format.
+
+    Outputs:
+    --------
+    - Returns a dictionary named data with:
+      - "models": A list of model names.
+      - "images": A list of available image.
+
+    """
     list_of_images = list_images()
     list_of_models = Configuration.models
     data = {"models": list_of_models, "images": list_of_images}
@@ -27,12 +38,47 @@ def info() -> dict[str, list[str]]:
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
-    """The home page of the service."""
+    """
+    The home page of the service.
+
+    This function handles the request to render the home page using a
+    predefined HTML template.
+
+    Inputs:
+    -------
+    request : Request --> The HTTP request containing data about the client's request.
+
+
+    Outputs:
+    --------
+    TemplateResponse --> Returns an HTML response generated from the "home.html" template,
+    with the request object passed as context.
+
+
+    """
     return templates.TemplateResponse("home.html", {"request": request})
 
 
 @app.get("/classifications")
 def create_classify(request: Request):
+    """
+    Serves the classification selection page.
+
+    This function handles rendering the classification selection page, where users
+    can choose an image and a model for classification.
+
+    Inputs:
+    -------
+    request : Request --> The HTTP request containing data about the client's request.
+
+
+    Outputs:
+    --------
+    TemplateResponse --> Returns an HTML response generated from the "classification_select.html"
+        template with the request object, list of available images, and available models.
+
+
+    """
     return templates.TemplateResponse(
         "classification_select.html",
         {"request": request, "images": list_images(), "models": Configuration.models},
@@ -41,6 +87,26 @@ def create_classify(request: Request):
 
 @app.post("/classifications")
 async def request_classification(request: Request):
+    """
+    Handles the classification request and returns the classification results.
+
+    This function processes a classification request by extracting form data from
+    the HTTP request, validating and retrieving the selected image and model,
+    performing image classification using the specified model, and returning the
+    classification results in a rendered HTML template.
+
+    Inputs:
+    -------
+    request : Request --> The HTTP request object containing form data.
+
+
+    Outputs:
+    --------
+    TemplateResponse -->Returns an HTML response generated from the "classification_output.html" template,
+        containing the classification results.
+
+
+    """
     form = ClassificationForm(request)
     await form.load_data()
     image_id = form.image_id
@@ -58,9 +124,20 @@ async def request_classification(request: Request):
 
 @app.get("/histogram")
 def histogram_get(request: Request):
-    """This function is a FastAPI route handler for the histogram calculator.
+    """
+    This function is a FastAPI route handler for the histogram calculator.
     It is responsible for rendering and returning the "histogram.html" template,
-    as all histogram-related functions are executed client-side."""
+    as all histogram-related functions are executed client-side.
+
+    Inputs:
+    -------
+    request : Request --> The HTTP request object.
+
+    Returns:
+    --------
+    TemplateResponse --> The rendered "histogram.html" page with the list of available images.
+
+    """
     return templates.TemplateResponse(
         "histogram.html",
         {"request": request, "images": list_images()},
@@ -69,11 +146,22 @@ def histogram_get(request: Request):
 
 @app.get("/editor")
 def editor_get(request: Request):
-    """The editor_get function handles GET requests to the /editor endpoint and renders
+    """
+    The editor_get function handles GET requests to the /editor endpoint and renders
     the editor selection page. It serves an HTML template that provides the user
     interface for selecting images,models, and image editing parameters.
     The template is populated with a list of available images and models
-    retrieved from the system configuration."""
+    retrieved from the system configuration.
+
+    Inputs:
+    -------
+    request : Request --> The HTTP request object.
+
+    Returns:
+    --------
+    TemplateResponse --> The rendered "editor_select.html" page with available images and models.
+
+    """
     return templates.TemplateResponse(
         "editor_select.html",
         {
@@ -86,11 +174,22 @@ def editor_get(request: Request):
 
 @app.post("/editor", response_class=HTMLResponse)
 async def request_edited_classification(request: Request):
-    """The request_edited_classification function handles POST requests to the /editor endpoint.
+    """
+    The request_edited_classification function handles POST requests to the /editor endpoint.
     It collects all parameters from the form on the "editor_select.html" page and passes them
     to the edit_image function to generate the edited image. The edited image is then classified,
     and both the edited image and classification results are returned to the client
-    via the "editor_output.html" template."""
+    via the "editor_output.html" template.
+
+    Inputs:
+    -------
+    request : Request --> The HTTP request containing form data.
+
+    Output:
+    --------
+    TemplateResponse --> The rendered "editor_output.html" page with classification results.
+
+    """
     form = EditedImageForm(request)
     await form.load_data()
 
@@ -129,6 +228,20 @@ async def request_edited_classification(request: Request):
 
 @app.get("/upload")
 def upload(request: Request):
+    """
+    Handles GET requests for the image upload page.
+
+    This function renders the "classification_upload.html" template,
+    which allows users to upload an image for classification.
+
+    Inputs:
+    -------
+    request : Request --> The HTTP request object.
+
+    Output:
+    --------
+    TemplateResponse --> The rendered "classification_upload.html" page.
+    """
     return templates.TemplateResponse(
         "classification_upload.html",
         {
@@ -140,6 +253,21 @@ def upload(request: Request):
 
 @app.post("/upload")
 async def upload(request: Request, file: UploadFile = File(...)):
+    """
+    Handles POST requests for uploading and classifying an image.
+
+    This function processes an uploaded image, applies image transformations (color, brightness, contrast, sharpness),
+    performs classification using a selected model, and returns the classification results along with the image.
+
+    Inputs:
+    -------
+    request : Request --> The HTTP request containing form data.
+    file : UploadFile --> The image file uploaded by the user.
+
+    Output:
+    --------
+    TemplateResponse --> The rendered "classification_upload_output.html" page with classification results and image path.
+    """
     form = UploadedImageForm(file=file, request=request)
     await form.load_data()
 
