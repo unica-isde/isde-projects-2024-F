@@ -39,7 +39,7 @@ def edit_image(original_image_path: str,
                brightness_value: int,
                contrast_value: int,
                sharpness_value: int,
-               edited_image_path: str = "app/static/imagenet_subset/edited.jpg") -> None:
+               edited_image_path: str = "app/static/imagenet_subset/edited.jpeg") -> None:
     """edit_image takes as input all the form parameters, including color_value,
       brightness_value, contrast_value, sharpness_value, and original_image_path.
       The original image is first copied to edited_image_path, which should always
@@ -59,7 +59,11 @@ def edit_image(original_image_path: str,
     original_image = Image.open(original_image_path)
     edited_image = original_image.copy()
 
-    # Scale and apply enhancements
+
+    if edited_image.mode != "RGB":
+        edited_image = edited_image.convert("RGB")
+
+    edited_image = ImageEnhance.Color(edited_image).enhance(scale_values(color_value))
     edited_image = ImageEnhance.Color(edited_image).enhance(scale_values(color_value))
     edited_image = ImageEnhance.Brightness(edited_image).enhance(scale_values(brightness_value))
     edited_image = ImageEnhance.Contrast(edited_image).enhance(scale_values(contrast_value))

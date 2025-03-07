@@ -26,18 +26,18 @@ class ClassificationForm:
         self.image_id: str = ""
         self.model_id: str = ""
 
-        async def load_data(self):
-            """
-            Asynchronously loads form data from the request.
+    async def load_data(self):
+        """
+        Asynchronously loads form data from the request.
 
-            This method extracts the form data submitted in the HTTP request and assigns the values
-            to the corresponding attributes (image_id and model_id). It ensures that the form
-            fields are properly retrieved and stored for further validation and processing.
+        This method extracts the form data submitted in the HTTP request and assigns the values
+        to the corresponding attributes (image_id and model_id). It ensures that the form
+        fields are properly retrieved and stored for further validation and processing.
 
-            """
-            form = await self.request.form()
-            self.image_id = form.get("image_id")
-            self.model_id = form.get("model_id")
+        """
+        form = await self.request.form()
+        self.image_id = form.get("image_id")
+        self.model_id = form.get("model_id")
 
     def is_valid(self):
         """

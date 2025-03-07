@@ -37,7 +37,7 @@ function downloadClassificationJSON(elementID) {
      * The parsed content is stored inside a data object with a timestamp. The data is then
      * formatted using JSON.stringify for better readability.
      * A Blob object is created from the JSON data and linked to an anchor element. And then
-     * a simulated cklick downloads the element.
+     * a simulated click downloads the element.
      *
      * Arguments:
      * - elementID: The identifier used in the downloaded filename.

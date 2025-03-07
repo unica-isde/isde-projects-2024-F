@@ -2,6 +2,17 @@
 
 {% block content %}
 
+    <script>
+        /**
+         * Highlights the current webpage in the navbar
+         * */
+        var current_bar = document.getElementById("homebar");
+        if (current_bar) {
+            current_bar.classList.add('active');
+        }
+    </script>
+
+
     <div class="container mt-4">
         <h1 class="text-left">Welcome to Image Classification</h1>
 
@@ -39,11 +50,5 @@
         </p>
     </div>
 
-    <script>
-    var current_bar = document.getElementById("homebar");
-    if (current_bar) {
-        current_bar.classList.add('active');
-    }
-</script>
 
 {% endblock %}

@@ -2,6 +2,15 @@
 
 {% block content %}
 
+    <script>
+        /**
+         * Highlights the current webpage in the navbar
+         * */
+        var current_bar = document.getElementById("editorbar");
+        if (current_bar) {
+            current_bar.classList.add('active');
+        }
+    </script>
 
     <div class="container mt-4">
         <h1 class="text-left">Select Model and Image</h1>
@@ -72,10 +81,5 @@
     </div>
 
     <script src="/static/slider_and_values_sync.js"></script>
-    <script>
-    var current_bar = document.getElementById("editorbar");
-    if (current_bar) {
-        current_bar.classList.add('active');
-    }
-</script>
+
 {% endblock %}
