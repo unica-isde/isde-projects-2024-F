@@ -7,54 +7,56 @@ from app.config import Configuration
 from app.forms.classification_form import EditedImageForm, UploadedImageForm
 from app.ml.classification_utils import classify_image, store_uploaded_image
 from app.utils import list_images, edit_image
+import os
 
 app = FastAPI()
 config = Configuration()
 
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount(
+    "/static",
+    StaticFiles(directory=os.path.join(os.path.dirname(__file__), "app/static")),
+    name="static"
+)
 templates = Jinja2Templates(directory="app/templates")
 
 
 @app.get("/info")
 def info() -> dict[str, list[str]]:
     """
-    Returns a dictionary containing available models and images.
+    Retrieves available models and images.
 
     This function compiles a list of preconfigured model names and available
     image files, returning them in a structured dictionary format.
 
-    Outputs:
-    --------
-    - Returns a dictionary named data with:
-      - "models": A list of model names.
-      - "images": A list of available image.
-
+    Returns
+    -------
+    dict[str, list[str]]
+        A dictionary containing:
+        - "models": A list of available model names.
+        - "images": A list of available image filenames.
     """
     list_of_images = list_images()
     list_of_models = Configuration.models
-    data = {"models": list_of_models, "images": list_of_images}
-    return data
+    return {"models": list_of_models, "images": list_of_images}
 
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
     """
-    The home page of the service.
+    Renders the home page of the service.
 
     This function handles the request to render the home page using a
     predefined HTML template.
 
-    Inputs:
+    Parameters
+    ----------
+    request : Request
+        The HTTP request containing data about the client's request.
+
+    Returns
     -------
-    request : Request --> The HTTP request containing data about the client's request.
-
-
-    Outputs:
-    --------
-    TemplateResponse --> Returns an HTML response generated from the "home.html" template,
-    with the request object passed as context.
-
-
+    TemplateResponse
+        The rendered "home.html" page.
     """
     return templates.TemplateResponse("home.html", {"request": request})
 
@@ -62,20 +64,21 @@ def home(request: Request):
 @app.get("/editor")
 def editor_get(request: Request):
     """
-    The editor_get function handles GET requests to the /editor endpoint and renders
-    the editor selection page. It serves an HTML template that provides the user
-    interface for selecting images,models, and image editing parameters.
-    The template is populated with a list of available images and models
-    retrieved from the system configuration.
+    Renders the editor selection page.
 
-    Inputs:
+    This function handles GET requests to the `/editor` endpoint and
+    serves an HTML template that provides the user interface for selecting
+    images, models, and image editing parameters.
+
+    Parameters
+    ----------
+    request : Request
+        The HTTP request object.
+
+    Returns
     -------
-    request : Request --> The HTTP request object.
-
-    Returns:
-    --------
-    TemplateResponse --> The rendered "editor_select.html" page with available images and models.
-
+    TemplateResponse
+        The rendered "editor_select.html" page with available images and models.
     """
     return templates.TemplateResponse(
         "editor_select.html",
@@ -88,22 +91,23 @@ def editor_get(request: Request):
 
 
 @app.post("/editor", response_class=HTMLResponse)
-async def request_edited_classification(request: Request):
+async def editor_post(request: Request):
     """
-    The request_edited_classification function handles POST requests to the /editor endpoint.
-    It collects all parameters from the form on the "editor_select.html" page and passes them
-    to the edit_image function to generate the edited image. The edited image is then classified,
-    and both the edited image and classification results are returned to the client
-    via the "editor_output.html" template.
+    Processes edited image classification.
 
-    Inputs:
+    This function handles POST requests to the `/editor` endpoint.
+    It collects parameters from the form on the "editor_select.html" page,
+    processes the image using `edit_image()`, and classifies the edited image.
+
+    Parameters
+    ----------
+    request : Request
+        The HTTP request containing form data.
+
+    Returns
     -------
-    request : Request --> The HTTP request containing form data.
-
-    Output:
-    --------
-    TemplateResponse --> The rendered "editor_output.html" page with classification results.
-
+    TemplateResponse
+        The rendered "editor_output.html" page with classification results.
     """
     form = EditedImageForm(request)
     await form.load_data()
@@ -114,17 +118,12 @@ async def request_edited_classification(request: Request):
     original_image_path = f"app/static/imagenet_subset/{form.image_id}"
     edited_image_path = "app/static/imagenet_subset/edited.jpg"
 
-    color_value = form.color_value
-    brightness_value = form.brightness_value
-    contrast_value = form.contrast_value
-    sharpness_value = form.sharpness_value
-
     edit_image(
         original_image_path,
-        color_value,
-        brightness_value,
-        contrast_value,
-        sharpness_value,
+        form.color_value,
+        form.brightness_value,
+        form.contrast_value,
+        form.sharpness_value,
         edited_image_path
     )
 
@@ -142,20 +141,22 @@ async def request_edited_classification(request: Request):
 
 
 @app.get("/upload")
-def upload(request: Request):
+def upload_get(request: Request):
     """
-    Handles GET requests for the image upload page.
+    Renders the image upload page.
 
-    This function renders the "classification_upload.html" template,
-    which allows users to upload an image for classification.
+    This function handles GET requests for the `/upload` endpoint and
+    serves the "classification_upload.html" template.
 
-    Inputs:
+    Parameters
+    ----------
+    request : Request
+        The HTTP request object.
+
+    Returns
     -------
-    request : Request --> The HTTP request object.
-
-    Output:
-    --------
-    TemplateResponse --> The rendered "classification_upload.html" page.
+    TemplateResponse
+        The rendered "classification_upload.html" page.
     """
     return templates.TemplateResponse(
         "classification_upload.html",
@@ -167,21 +168,25 @@ def upload(request: Request):
 
 
 @app.post("/upload")
-async def upload(request: Request, file: UploadFile = File(...)):
+async def upload_post(request: Request, file: UploadFile = File(...)):
     """
-    Handles POST requests for uploading and classifying an image.
+    Handles image upload and classification.
 
-    This function processes an uploaded image, applies image transformations (color, brightness, contrast, sharpness),
-    performs classification using a selected model, and returns the classification results along with the image.
+    This function processes an uploaded image, applies image transformations
+    (color, brightness, contrast, sharpness), classifies the image using a
+    selected model, and returns the classification results.
 
-    Inputs:
+    Parameters
+    ----------
+    request : Request
+        The HTTP request containing form data.
+    file : UploadFile
+        The image file uploaded by the user.
+
+    Returns
     -------
-    request : Request --> The HTTP request containing form data.
-    file : UploadFile --> The image file uploaded by the user.
-
-    Output:
-    --------
-    TemplateResponse --> The rendered "classification_upload_output.html" page with classification results and image path.
+    TemplateResponse
+        The rendered "classification_upload_output.html" page with classification results.
     """
     form = UploadedImageForm(file=file, request=request)
     await form.load_data()
@@ -191,8 +196,7 @@ async def upload(request: Request, file: UploadFile = File(...)):
 
     filename = store_uploaded_image(form.file)
 
-    image_id = filename
-    original_image_path = f"app/static/uploads/{image_id}"
+    original_image_path = f"app/static/uploads/{filename}"
     edited_image_path = "app/static/imagenet_subset/edited.jpg"
 
     edit_image(

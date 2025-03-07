@@ -1,7 +1,7 @@
 import importlib
 import logging
 
-from config import Configuration
+from .config import Configuration
 
 conf = Configuration()
 
@@ -10,11 +10,15 @@ def prepare_models():
     """
     Pre-downloads the models specified in the configuration object.
 
-    This function iterates over the models specified in the configuration and downloads them using
-    the `torchvision.models` module. The models are downloaded with their default weights to avoid
-    unnecessary delays during inference. The function also frees up memory after each model is
-    downloaded by deleting the model from memory.
+    This function iterates over the models specified in the configuration and downloads them
+    using the `torchvision.models` module. The models are downloaded with their default weights
+    to avoid unnecessary delays during inference. After downloading, the function releases memory
+    by deleting the model from memory.
 
+    Raises
+    ------
+    ImportError
+        If the specified model is not found in the `torchvision.models` module.
     """
     for model_name in conf.models:
         try:

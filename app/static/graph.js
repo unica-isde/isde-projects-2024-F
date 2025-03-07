@@ -1,34 +1,37 @@
-
-
 $(document).ready(function () {
     var scripts = document.getElementById('makeGraph');
     var classification_scores = scripts.getAttribute('classification_scores');
     makeGraph(classification_scores);
 });
 
+/**
+ * Generates a horizontal bar chart displaying classification results using Chart.js.
+ *
+ * This function takes classification results as input, parses them if they are in JSON format,
+ * and visualizes them as a horizontal bar chart using Chart.js.
+ *
+ * @param {string | array} results - A JSON string or an array containing classification results.
+ * @throws {Error} If results are not in a valid JSON format.
+ */
 function makeGraph(results) {
-    /**
-    * Generates a horizontal bar chart displaying classification results.
-    *
-    * This function takes classification results as input, parses them if they are in JSON format,
-    * and visualizes them using Chart.js.
-    *
-    * Inputs:
-    * -------
-    * results : string | array --> A JSON string or an array containing classification results.
-    *
-    *
-    */
     console.log(results);
-    results = JSON.parse(results);
+    
+    try {
+        results = JSON.parse(results);
+    } catch (error) {
+        console.error("Error parsing classification results:", error);
+        return;
+    }
+
     var ctx = document.getElementById("classificationOutput").getContext('2d');
+
     var myChart = new Chart(ctx, {
         type: 'horizontalBar',
         data: {
-            labels: [results[0][0], results[1][0], results[2][0], results[3][0], results[4][0]],
+            labels: results.map(item => item[0]), // Extract labels dynamically
             datasets: [{
                 label: 'Output scores',
-                data: [results[0][1], results[1][1], results[2][1], results[3][1], results[4][1]],
+                data: results.map(item => item[1]), // Extract scores dynamically
                 backgroundColor: [
                     'rgba(26,74,4,0.8)',
                     'rgba(117,0,20,0.8)',

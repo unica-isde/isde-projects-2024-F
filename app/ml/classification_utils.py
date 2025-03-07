@@ -14,27 +14,27 @@ from fastapi import UploadFile
 
 from app.config import Configuration
 
-
 conf = Configuration()
 
 
-def fetch_image(image_id):
+def fetch_image(image_id: str) -> Image.Image:
     """
-    Modified function to get the image from the dataset or upload folder
+    Retrieves an image from the dataset or upload folder.
 
-    This function try to get an image using the provided image ID. It first checks if
-    the image exists in the upload folder. If exists, it opens and returns the image.
-    Otherwise, it attempts to fetch the image from the default image folder.
+    This function attempts to fetch an image using the provided image ID.
+    It first checks if the image exists in the upload folder. If found,
+    it opens and returns the image. Otherwise, it retrieves the image
+    from the default image folder.
 
+    Parameters
+    ----------
+    image_id : str
+        The filename or identifier of the image to be retrieved.
 
-    Inputs:
+    Returns
     -------
-    image_id : str --> The filename or identifier of the image to be found.
-
-    Outputs:
-    --------
-    Image.Image --> The opened image file as a PIL Image object.
-
+    Image.Image
+        The opened image file as a PIL Image object.
     """
     if os.path.exists(os.path.join(conf.upload_folder_path, image_id)):
         print("debug path exist")
@@ -44,36 +44,38 @@ def fetch_image(image_id):
 
 def store_uploaded_image(file: UploadFile) -> str:
     """
-    Saves an uploaded image to the designated upload folder and returns its filename.
+    Saves an uploaded image to the designated upload folder.
 
-    This function takes an uploaded image file, saves it to the directory,
-    and returns the name of the saved file.
+    This function stores the uploaded image file in the upload directory
+    and returns the filename.
 
-    Inputs:
+    Parameters
+    ----------
+    file : UploadFile
+        The uploaded file containing the image data.
+
+    Returns
     -------
-    file : UploadFile --> The uploaded file containing the image data.
-
-    Outputs:
-    --------
-    str --> The filename of the saved image.
-
+    str
+        The filename of the saved image.
     """
     file_path = os.path.join(conf.upload_folder_path, file.filename)
     with open(file_path, "wb") as f:
         f.write(file.file.read())
     return file.filename
 
-def get_labels():
+
+def get_labels() -> list:
     """
-    Returns the labels of Imagenet dataset as a list, where
-    the index of the list corresponds to the output class.
+    Retrieves the ImageNet class labels.
 
-    This function loads the Imagenet class labels from a JSON file and returns them as a list.
+    This function loads the ImageNet labels from a JSON file and returns them
+    as a list, where each index corresponds to a class label.
 
-    Outputs:
-    --------
-    list --> A list of ImageNet labels where each index represents a class.
-
+    Returns
+    -------
+    list of str
+        A list of ImageNet labels where each index represents a class.
     """
     labels_path = os.path.join(conf.image_folder_path, "imagenet_labels.json")
     with open(labels_path) as f:
@@ -81,77 +83,86 @@ def get_labels():
     return labels
 
 
-def get_model(model_id):
+def get_model(model_id: str):
     """
-    Imports a pretrained model from the ones that are specified in
-    the configuration file. This is needed as we want to pre-download the
-    specified model in order to avoid unnecessary waits for the user
+    Loads a pre-trained model from the configuration.
 
-    Inputs:
+    This function imports a specified model from `torchvision.models`
+    using the given model ID. The model is pre-downloaded to prevent
+    unnecessary waiting during classification.
+
+    Parameters
+    ----------
+    model_id : str
+        The identifier of the model to be loaded (must be in `conf.models`).
+
+    Returns
     -------
-    model_id : str --> The identifier of the model to be loaded (must be in `conf.models`).
+    torch.nn.Module
+        The loaded PyTorch model with default pretrained weights.
 
-    Outputs:
-    --------
-    torch.nn.Module --> The loaded PyTorch model with default pretrained weights.
-
+    Raises
+    ------
+    ImportError
+        If the specified model is not found.
     """
     if model_id in conf.models:
         try:
             module = importlib.import_module("torchvision.models")
             return module.__getattribute__(model_id)(weights="DEFAULT")
         except ImportError:
-            logging.error("Model {} not found".format(model_id))
+            logging.error(f"Model {model_id} not found")
     else:
-        raise ImportError
+        raise ImportError(f"Model {model_id} not found in configuration.")
 
 
-def classify_image(model_id, img_id):
+def classify_image(model_id: str, img_id: str) -> list:
     """
-    Returns the top-5 classification score output from the
-    model specified in model_id when it is fed with the
-    image corresponding to img_id.
+    Classifies an image using the specified pre-trained model.
 
-    Inputs:
+    This function feeds the specified image into a pre-trained model and
+    returns the top-5 classification results.
+
+    Parameters
+    ----------
+    model_id : str
+        The identifier of the pre-trained model to be used for classification.
+    img_id : str
+        The identifier (filename) of the image to be classified.
+
+    Returns
     -------
-    model_id : str --> The identifier of the pretrained model to be used for classification.
-    img_id : str --> The identifier (filename) of the image to be classified.
-
-    Outputs:
-    --------
-    list --> A list of the top-5 classification results, where each item is a tuple:
-             (label_name: str, confidence_score: float)
-
+    list of tuple
+        A list containing the top-5 classification results, where each item
+        is a tuple of (label_name: str, confidence_score: float).
     """
     img = fetch_image(img_id)
     model = get_model(model_id)
     model.eval()
-    transform = transforms.Compose(
-        (
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        )
-    )
 
-    # apply transform from torchvision
+    transform = transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
+
+    # Apply transformation
     img = img.convert("RGB")
     preprocessed = transform(img).unsqueeze(0)
 
-    # gets the output from the model
+    # Get model output
     out = model(preprocessed)
     _, indices = torch.sort(out, descending=True)
 
-    # transforms scores as percentages
+    # Convert scores to percentages
     percentage = torch.nn.functional.softmax(out, dim=1)[0] * 100
 
-    # gets the labels
+    # Retrieve labels
     labels = get_labels()
 
-    # takes the top-5 classification output and returns it
-    # as a list of tuples (label_name, score)
-    output = [[labels[idx], percentage[idx].item()] for idx in indices[0][:5]]
+    # Extract top-5 classification results
+    output = [(labels[idx], percentage[idx].item()) for idx in indices[0][:5]]
 
     img.close()
     return output

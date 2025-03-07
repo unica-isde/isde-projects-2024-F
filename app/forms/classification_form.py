@@ -1,26 +1,46 @@
 from fastapi import Request, UploadFile
 
+from fastapi import Request, UploadFile
+from typing import Optional
+
 
 class EditedImageForm:
     """
-    The EditedImageForm class is used to collect all the parameters submitted
-     through the editor_select.html form and pass them to the backend for processing
-     and image editing.
+    A form handler for collecting and validating image editing parameters.
 
-     """
+    This class is used to collect all parameters submitted through the `editor_select.html`
+    form and pass them to the backend for processing and image editing.
+
+    Attributes
+    ----------
+    request : Request
+        The HTTP request containing form data.
+    errors : list
+        A list of validation error messages.
+    model_id : str
+        The selected model identifier.
+    image_id : str
+        The selected image identifier.
+    color_value : int
+        The color adjustment value (-100 to 100).
+    brightness_value : int
+        The brightness adjustment value (-100 to 100).
+    contrast_value : int
+        The contrast adjustment value (-100 to 100).
+    sharpness_value : int
+        The sharpness adjustment value (-100 to 100).
+    """
 
     def __init__(self, request: Request) -> None:
         """
-        Initializes a new instance of the class.
+        Initializes a new instance of the EditedImageForm class.
 
-        This constructor sets up the initial attributes for handling a classification form request.
-        It initializes the request object, an empty list for validation errors, and distinct parameters
-        for processing the image.
+        This constructor sets up attributes to handle the classification form request.
 
-        Inputs:
-        -------
-        request : Request --> The HTTP request containing form data.
-
+        Parameters
+        ----------
+        request : Request
+            The HTTP request containing form data.
         """
         self.request: Request = request
         self.errors: list = []
@@ -35,11 +55,9 @@ class EditedImageForm:
         """
         Loads and processes form data from the HTTP request.
 
-        This asynchronous method extracts form values from the request and assigns them to the
-        corresponding instance variables. It is responsible for obtaining distinct characteristics such as
-        model ID, image ID, color, brightness, contrast, and sharpness.
-
-
+        This asynchronous method extracts form values from the request and assigns them
+        to corresponding instance variables, including model ID, image ID, color, brightness,
+        contrast, and sharpness.
         """
         form = await self.request.form()
         self.model_id = form.get("model_id")
@@ -49,57 +67,67 @@ class EditedImageForm:
         self.contrast_value = int(form.get("contrast_value", 0))
         self.sharpness_value = int(form.get("sharpness_value", 0))
 
-    def is_valid(self):
+    def is_valid(self) -> bool:
         """
         Validates the form data.
 
         This method checks if the required fields are present and correctly formatted.
-        If any of these fields are missing or not of type str, an error message
-        is added to the errors list.
+        If any required field is missing or invalid, an error message is added to the
+        `errors` list.
 
-        Outputs:
-        --------
+        Returns
+        -------
         bool
-            - `True` --> `image_id` and `model_id` are valid.
-            - `False` --> errors are stored in `errors` list.
+            `True` if `image_id` and `model_id` are valid, otherwise `False`.
         """
         if not self.image_id or not isinstance(self.image_id, str):
-            self.errors.append("A valid image id is required")
+            self.errors.append("A valid image ID is required.")
         if not self.model_id or not isinstance(self.model_id, str):
-            self.errors.append("A valid model id is required")
-        if not self.errors:
-            return True
-        return False
-
-
-from fastapi import Request, UploadFile
-from typing import Optional
+            self.errors.append("A valid model ID is required.")
+        return not bool(self.errors)
 
 
 class UploadedImageForm:
     """
-    The UploadedImageForm class is used to collect and validate the file, model ID,
-    and additional image editing parameters submitted through the form in the
-    classification_upload.html and editor_select.html templates.
+    A form handler for processing uploaded image files and associated metadata.
 
-    This form ensures that a file is uploaded, a valid model ID is provided, and any
-    optional image editing parameters are properly handled before proceeding with
-    image classification or editing.
+    This class collects and validates the uploaded file, model ID, and additional image
+    editing parameters submitted through the `classification_upload.html` and `editor_select.html` forms.
+
+    Attributes
+    ----------
+    request : Request
+        The HTTP request containing form data.
+    file : Optional[UploadFile]
+        The uploaded image file.
+    errors : list
+        A list of validation error messages.
+    model_id : str
+        The selected model identifier.
+    image_id : str
+        The assigned image identifier.
+    color_value : int
+        The color adjustment value (-100 to 100).
+    brightness_value : int
+        The brightness adjustment value (-100 to 100).
+    contrast_value : int
+        The contrast adjustment value (-100 to 100).
+    sharpness_value : int
+        The sharpness adjustment value (-100 to 100).
     """
 
     def __init__(self, file: Optional[UploadFile], request: Request) -> None:
         """
-        Initializes a new instance of the class.
+        Initializes a new instance of the UploadedImageForm class.
 
-        This constructor sets up the initial attributes for managing file upload and form data.
-        It initializes the request object, the uploaded file (if any), and distinct attributes
-        of the image as model ID, image ID, and values for color, brightness, contrast, and sharpness.
+        This constructor sets up attributes for managing file upload and form data.
 
-        Inputs:
-        -------
-        file : Optional[UploadFile] --> The uploaded file.
-        request : Request --> The HTTP request containing the form data.
-
+        Parameters
+        ----------
+        file : Optional[UploadFile]
+            The uploaded image file.
+        request : Request
+            The HTTP request containing form data.
         """
         self.request: Request = request
         self.file: Optional[UploadFile] = file
@@ -115,59 +143,53 @@ class UploadedImageForm:
         """
         Loads and processes form data from the HTTP request.
 
-        This asynchronous method extracts form values from the request and assigns them to the
-        corresponding instance variables. It is responsible for obtaining distinct characteristics such as
-        model ID, color, brightness, contrast, and sharpness.
-
-
+        This asynchronous method extracts form values from the request and assigns them
+        to corresponding instance variables, including model ID, color, brightness,
+        contrast, and sharpness.
         """
         form = await self.request.form()
-
         self.model_id = form.get("model_id", "").strip()
         self.color_value = self.safe_int(form.get("color_value", 0))
         self.brightness_value = self.safe_int(form.get("brightness_value", 0))
         self.contrast_value = self.safe_int(form.get("contrast_value", 0))
         self.sharpness_value = self.safe_int(form.get("sharpness_value", 0))
 
-    def safe_int(self, value, default=0):
-
+    def safe_int(self, value, default=0) -> int:
         """
-        Tries to convert a given value to an integer, returning a default value if the conversion fails.
+        Attempts to convert a given value to an integer, returning a default value if the conversion fails.
 
-        This method safely attempts to convert the provided value to an integer. If the conversion
-        fails due to a ValueError or TypeError, it returns a default value instead.
+        Parameters
+        ----------
+        value : Any
+            The value to be converted to an integer.
+        default : int, optional
+            The value to return if the conversion fails (default is 0).
 
-        Inputs:
+        Returns
         -------
-        value : Any --> The value to be converted to an integer.
-        default : int (optional) --> The value to return if the conversion fails. Default is 0.
-
-        Outputs:
-        --------
-        int --> The converted integer if successful, or the default value if not successful.
-
+        int
+            The converted integer if successful, otherwise the default value.
         """
         try:
             return int(value)
         except (ValueError, TypeError):
             return default
 
-    def is_valid(self):
+    def is_valid(self) -> bool:
         """
-        Validates the required fields for the image processing form.
+        Validates the required fields for the uploaded image form.
 
-        This method checks whether the uploaded file and model ID, are provided.
-        If any required field is not provided, it appends an appropriate error message
+        This method checks whether the uploaded file and model ID are provided.
+        If any required field is missing, an appropriate error message is appended
         to the `errors` list.
 
-        Outputs:
-        --------
-        bool --> Returns True if the form is valid (no errors found), otherwise False.
-
+        Returns
+        -------
+        bool
+            `True` if the form is valid (no errors found), otherwise `False`.
         """
         if not self.file:
             self.errors.append("A valid image file is required.")
         if not self.model_id:
             self.errors.append("A valid model ID is required.")
-
         return not bool(self.errors)
