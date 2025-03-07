@@ -77,8 +77,19 @@
 
 
     <script>
-        document.getElementById("imageUpload").addEventListener("change", function () {
-            document.querySelector("select[name='image_id']").disabled = this.files.length > 0;
+        /**
+         * This script ensures that the submit button remains disabled
+         * until an image file is uploaded. This helps prevent errors
+         * in the image processing section by ensuring valid input before submission.
+         */
+        document.addEventListener("DOMContentLoaded", function () {
+            var fileInput = document.getElementById("imageUpload");
+            var submitButton = document.querySelector("button[type='submit']");
+            submitButton.disabled = true;
+
+            fileInput.addEventListener("change", function () {
+                submitButton.disabled = this.files.length === 0;
+            });
         });
     </script>
     <script src="/static/slider_and_values_sync.js"></script>
