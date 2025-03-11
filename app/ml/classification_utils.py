@@ -16,15 +16,18 @@ from app.config import Configuration
 
 conf = Configuration()
 
+import os
+from PIL import Image
+
 
 def fetch_image(image_id: str) -> Image.Image:
     """
-    Retrieves an image from the dataset or upload folder.
+    Retrieves an image from the edited, upload, or dataset folder.
 
     This function attempts to fetch an image using the provided image ID.
-    It first checks if the image exists in the upload folder. If found,
-    it opens and returns the image. Otherwise, it retrieves the image
-    from the default image folder.
+    - It first checks if an edited version of the image exists in the 'edited' folder.
+    - If not found, it looks in the upload folder.
+    - If still not found, it retrieves the image from the default dataset folder.
 
     Parameters
     ----------
@@ -36,10 +39,24 @@ def fetch_image(image_id: str) -> Image.Image:
     Image.Image
         The opened image file as a PIL Image object.
     """
-    if os.path.exists(os.path.join(conf.upload_folder_path, image_id)):
-        print("debug path exist")
-        return Image.open(os.path.join(conf.upload_folder_path, image_id))
-    return Image.open(os.path.join(conf.image_folder_path, image_id))
+
+    edited_image_path = os.path.join(conf.edit_folder_path, image_id)
+    upload_image_path = os.path.join(conf.upload_folder_path, image_id)
+    default_image_path = os.path.join(conf.image_folder_path, image_id)
+
+    if os.path.exists(edited_image_path):
+        print(f"Fetching edited image: {edited_image_path}")
+        return Image.open(edited_image_path)
+
+    if os.path.exists(upload_image_path):
+        print(f"Fetching uploaded image: {upload_image_path}")
+        return Image.open(upload_image_path)
+
+    if os.path.exists(default_image_path):
+        print(f"Fetching default image: {default_image_path}")
+        return Image.open(default_image_path)
+
+    raise FileNotFoundError(f"Image not found in any folder: {image_id}")
 
 
 def store_uploaded_image(file: UploadFile) -> str:

@@ -23,7 +23,7 @@ function makeGraph(results) {
         return;
     }
 
-    var ctx = document.getElementById("classificationOutput").getContext('2d');
+    var ctx = document.getElementById("classification_output").getContext('2d');
 
     var myChart = new Chart(ctx, {
         type: 'horizontalBar',

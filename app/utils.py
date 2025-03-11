@@ -2,6 +2,7 @@ import os
 
 from app.config import Configuration
 from PIL import Image, ImageEnhance
+import asyncio
 
 conf = Configuration()
 
@@ -49,7 +50,7 @@ def edit_image(original_image_path: str,
                brightness_value: int,
                contrast_value: int,
                sharpness_value: int,
-               edited_image_path: str = "app/static/imagenet_subset/edited.jpeg") -> None:
+               edited_image_path: str) -> None:
     """
     Applies image enhancements based on user-selected values and saves the edited image.
 
@@ -90,3 +91,29 @@ def edit_image(original_image_path: str,
     edited_image = ImageEnhance.Sharpness(edited_image).enhance(scale_values(sharpness_value))
 
     edited_image.save(edited_image_path, format="JPEG")
+
+
+async def remove_file_after_time(file_path: str) -> None:
+    """
+        Deletes a specified file after a delay of 2 minutes.
+
+        This function waits for 10 seconds before checking if the file
+        exists at the given path. If the file is found, it is removed from
+        the filesystem.
+
+        Parameters
+        ----------
+        file_path : str
+            The absolute or relative path of the file to be deleted.
+
+        Notes
+        -----
+        - This function is typically used as a background task in FastAPI.
+        - If the file is already deleted before this function executes, no action is taken.
+        - The delay is implemented using `asyncio.sleep(10)`, which blocks execution within this function.
+
+        """
+    await  asyncio.sleep(10)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        print(f"{file_path} deleted")

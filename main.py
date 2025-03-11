@@ -6,7 +6,8 @@ from fastapi.templating import Jinja2Templates
 from app.config import Configuration
 from app.forms.classification_form import EditedImageForm, UploadedImageForm
 from app.ml.classification_utils import classify_image, store_uploaded_image
-from app.utils import list_images, edit_image
+from app.utils import list_images, edit_image, remove_file_after_time
+from fastapi import BackgroundTasks
 import os
 
 app = FastAPI()
@@ -91,7 +92,7 @@ def editor_get(request: Request):
 
 
 @app.post("/editor", response_class=HTMLResponse)
-async def editor_post(request: Request):
+async def editor_post(request: Request, background_tasks: BackgroundTasks):
     """
     Processes edited image classification.
 
@@ -116,7 +117,7 @@ async def editor_post(request: Request):
         return {"errors": form.errors}
 
     original_image_path = f"app/static/imagenet_subset/{form.image_id}"
-    edited_image_path = "app/static/imagenet_subset/edited.jpg"
+    edited_image_path = f"app/static/edited/edited_{form.image_id}"
 
     edit_image(
         original_image_path,
@@ -127,8 +128,10 @@ async def editor_post(request: Request):
         edited_image_path
     )
 
-    edited_image_id = "edited.jpg"
+    edited_image_id = f"edited_{form.image_id}"
     classification_scores = classify_image(form.model_id, edited_image_id)
+
+    background_tasks.add_task(remove_file_after_time, edited_image_path)
 
     return templates.TemplateResponse(
         "editor_output.html",
@@ -158,8 +161,10 @@ def upload_get(request: Request):
     TemplateResponse
         The rendered "classification_upload.html" page.
     """
+
     return templates.TemplateResponse(
         "classification_upload.html",
+
         {
             "request": request,
             "models": Configuration.models
@@ -168,7 +173,7 @@ def upload_get(request: Request):
 
 
 @app.post("/upload")
-async def upload_post(request: Request, file: UploadFile = File(...)):
+async def upload_post(request: Request, background_tasks: BackgroundTasks, file: UploadFile = File(...)):
     """
     Handles image upload and classification.
 
@@ -197,7 +202,7 @@ async def upload_post(request: Request, file: UploadFile = File(...)):
     filename = store_uploaded_image(form.file)
 
     original_image_path = f"app/static/uploads/{filename}"
-    edited_image_path = "app/static/imagenet_subset/edited.jpg"
+    edited_image_path = f"app/static/edited/edited_{filename}"
 
     edit_image(
         original_image_path,
@@ -208,7 +213,11 @@ async def upload_post(request: Request, file: UploadFile = File(...)):
         edited_image_path
     )
 
-    classification_scores = classify_image(model_id=form.model_id, img_id=filename)
+    os.remove(original_image_path)
+    edited_image_id = f"edited_{filename}"
+    classification_scores = classify_image(model_id=form.model_id, img_id=edited_image_id)
+
+    background_tasks.add_task(remove_file_after_time, edited_image_path)
 
     return templates.TemplateResponse(
         "classification_upload_output.html",

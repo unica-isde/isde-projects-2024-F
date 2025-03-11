@@ -28,18 +28,18 @@
                 <div class="card p-3">
                     <h5 class="text-left">Selected Image</h5>
                     <img class="large-front-thumbnail" id="selectedImage"
-                         src="{{ 'static/imagenet_subset/'+image_id }} "
+                         src="{{ url_for('static', path='edited/' + image_id) }}"
                          alt="{{ image_id }}"/>
                 </div>
                 <a class="btn btn-secondary mt-3" href="/editor" role="button">Back</a>
                 <a class="btn btn-secondary mt-3"
-                   onclick="downloadPLOT('classificationOutput'); downloadPLOT('histogram_output')" role="button"
-                   style=" padding-left: 10px; background-color: darkslategray ">Dowload Plot
+                   onclick="downloadPLOT('classification_output'); downloadPLOT('histogram_output')" role="button"
+                   style=" padding-left: 10px; background-color: darkslategray ">Download Plot
                 </a>
                 <a class="btn btn-secondary mt-3"
-                   onclick="downloadClassificationJSON('classificationOutput'); downloadHistogramJSON()"
+                   onclick="downloadClassificationJSON('classification_output'); downloadHistogramJSON()"
                    role="button"
-                   style=" padding-left: 10px; background-color: darkslategray ">Dowload Results
+                   style=" padding-left: 10px; background-color: darkslategray ">Download Results
                 </a>
 
             </div>
@@ -47,7 +47,7 @@
             <div class="col">
                 <div class="card p-3">
                     <h5 class="text-left">Classification Output</h5>
-                    <canvas id="classificationOutput"
+                    <canvas id="classification_output"
                             style="width: 100%; height: 300px; margin: auto; padding: 20px;"></canvas>
                     <div class="align-items-center">
                         <h2 id="waitText"></h2>
