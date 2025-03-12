@@ -1,8 +1,10 @@
 import json
-from fastapi import FastAPI, Request, UploadFile, File, BackgroundTasks
+from fastapi import FastAPI, Request, UploadFile, File, BackgroundTasks, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.responses import JSONResponse
+
 from app.config import Configuration
 from app.forms.classification_form import EditedImageForm, UploadedImageForm
 from app.ml.classification_utils import classify_image, store_uploaded_image
@@ -124,16 +126,21 @@ async def editor_post(request: Request, background_tasks: BackgroundTasks):
         edited_image_name = get_filename(edited_image_directory, form.image_id)
         edited_image_path = os.path.join(edited_image_directory, edited_image_name)
 
-        edit_image(
-            original_image_path,
-            form.color_value,
-            form.brightness_value,
-            form.contrast_value,
-            form.sharpness_value,
-            edited_image_path
-        )
-
-        classification_scores = classify_image(model_id=form.model_id, img_id=edited_image_name)
+        try:
+            edit_image(
+                original_image_path,
+                form.color_value,
+                form.brightness_value,
+                form.contrast_value,
+                form.sharpness_value,
+                edited_image_path
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error editing image: {str(e)}")
+        try:
+            classification_scores = classify_image(model_id=form.model_id, img_id=edited_image_name)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error classifying image: {str(e)}")
 
         background_tasks.add_task(remove_file_after_time, edited_image_path)
 
@@ -146,20 +153,24 @@ async def editor_post(request: Request, background_tasks: BackgroundTasks):
                 "classification_scores": json.dumps(classification_scores),
             },
         )
-    else:
-        image_id = form.image_id
-        model_id = form.model_id
-        classification_scores = classify_image(model_id=model_id, img_id=image_id)
 
-        return templates.TemplateResponse(
-            "editor_output.html",
-            {
-                "request": request,
-                "image_id": image_id,
-                "image_path": f"/static/imagenet_subset/{image_id}",
-                "classification_scores": json.dumps(classification_scores),
-            },
-        )
+    image_id = form.image_id
+    model_id = form.model_id
+
+    try:
+        classification_scores = classify_image(model_id=model_id, img_id=image_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error classifying original image: {str(e)}")
+
+    return templates.TemplateResponse(
+        "editor_output.html",
+        {
+            "request": request,
+            "image_id": image_id,
+            "image_path": f"/static/imagenet_subset/{image_id}",
+            "classification_scores": json.dumps(classification_scores),
+        },
+    )
 
 
 @app.get("/upload")
@@ -214,7 +225,6 @@ async def upload_post(request: Request, background_tasks: BackgroundTasks, file:
     TemplateResponse
         The rendered template displaying classification results.
     """
-
     form = UploadedImageForm(file=file, request=request)
     await form.load_data()
 
@@ -224,7 +234,11 @@ async def upload_post(request: Request, background_tasks: BackgroundTasks, file:
     original_image_directory = "app/static/uploads/"
     os.makedirs(original_image_directory, exist_ok=True)
 
-    filename = store_uploaded_image(form.file)
+    try:
+        filename = store_uploaded_image(form.file)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error saving uploaded file: {str(e)}")
+
     original_image_path = os.path.join(original_image_directory, filename)
 
     if any([form.color_value, form.brightness_value, form.contrast_value, form.sharpness_value]):
@@ -234,17 +248,22 @@ async def upload_post(request: Request, background_tasks: BackgroundTasks, file:
         edited_image_name = get_filename(edited_image_directory, filename)
         edited_image_path = os.path.join(edited_image_directory, edited_image_name)
 
-        edit_image(
-            original_image_path,
-            form.color_value,
-            form.brightness_value,
-            form.contrast_value,
-            form.sharpness_value,
-            edited_image_path
-        )
+        try:
+            edit_image(
+                original_image_path,
+                form.color_value,
+                form.brightness_value,
+                form.contrast_value,
+                form.sharpness_value,
+                edited_image_path
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error editing image: {str(e)}")
 
-        edited_image_name
-        classification_scores = classify_image(model_id=form.model_id, img_id=edited_image_name)
+        try:
+            classification_scores = classify_image(model_id=form.model_id, img_id=edited_image_name)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error classifying image: {str(e)}")
 
         background_tasks.add_task(remove_file_after_time, original_image_path)
         background_tasks.add_task(remove_file_after_time, edited_image_path)
@@ -261,7 +280,11 @@ async def upload_post(request: Request, background_tasks: BackgroundTasks, file:
 
     image_id = filename
     model_id = form.model_id
-    classification_scores = classify_image(model_id=model_id, img_id=image_id)
+
+    try:
+        classification_scores = classify_image(model_id=model_id, img_id=image_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error classifying original image: {str(e)}")
 
     background_tasks.add_task(remove_file_after_time, original_image_path)
 

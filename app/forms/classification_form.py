@@ -120,8 +120,6 @@ class UploadedImageForm:
         """
         Initializes a new instance of the UploadedImageForm class.
 
-        This constructor sets up attributes for managing file upload and form data.
-
         Parameters
         ----------
         file : Optional[UploadFile]
@@ -131,7 +129,7 @@ class UploadedImageForm:
         """
         self.request: Request = request
         self.file: Optional[UploadFile] = file
-        self.errors: list = []
+        self.errors: list[str] = []
         self.model_id: str = ""
         self.image_id: str = ""
         self.color_value: int = 0
@@ -143,25 +141,32 @@ class UploadedImageForm:
         """
         Loads and processes form data from the HTTP request.
 
-        This asynchronous method extracts form values from the request and assigns them
-        to corresponding instance variables, including model ID, color, brightness,
-        contrast, and sharpness.
+        Extracts form values, ensuring they are valid integers within allowed ranges.
         """
-        form = await self.request.form()
-        self.model_id = form.get("model_id", "").strip()
-        self.color_value = self.safe_int(form.get("color_value", 0))
-        self.brightness_value = self.safe_int(form.get("brightness_value", 0))
-        self.contrast_value = self.safe_int(form.get("contrast_value", 0))
-        self.sharpness_value = self.safe_int(form.get("sharpness_value", 0))
+        try:
+            form = await self.request.form()
+            self.model_id = form.get("model_id", "").strip()
 
-    def safe_int(self, value, default=0) -> int:
+            self.color_value = self.safe_int(form.get("color_value", 0), -100, 100)
+            self.brightness_value = self.safe_int(form.get("brightness_value", 0), -100, 100)
+            self.contrast_value = self.safe_int(form.get("contrast_value", 0), -100, 100)
+            self.sharpness_value = self.safe_int(form.get("sharpness_value", 0), -100, 100)
+
+        except Exception:
+            self.errors.append("An error occurred while processing the form. Please try again.")
+
+    def safe_int(self, value, min_value=-100, max_value=100, default=0) -> int:
         """
-        Attempts to convert a given value to an integer, returning a default value if the conversion fails.
+        Attempts to convert a given value to an integer, ensuring it falls within a specified range.
 
         Parameters
         ----------
         value : Any
             The value to be converted to an integer.
+        min_value : int, optional
+            The minimum allowed value (default is -100).
+        max_value : int, optional
+            The maximum allowed value (default is 100).
         default : int, optional
             The value to return if the conversion fails (default is 0).
 
@@ -171,7 +176,8 @@ class UploadedImageForm:
             The converted integer if successful, otherwise the default value.
         """
         try:
-            return int(value)
+            value = int(value)
+            return max(min_value, min(value, max_value))  # Ensure within range
         except (ValueError, TypeError):
             return default
 
@@ -179,9 +185,8 @@ class UploadedImageForm:
         """
         Validates the required fields for the uploaded image form.
 
-        This method checks whether the uploaded file and model ID are provided.
-        If any required field is missing, an appropriate error message is appended
-        to the `errors` list.
+        Ensures the uploaded file and model ID are provided.
+        If any required field is missing, an error message is added to `errors`.
 
         Returns
         -------
@@ -190,6 +195,24 @@ class UploadedImageForm:
         """
         if not self.file:
             self.errors.append("A valid image file is required.")
-        if not self.model_id:
-            self.errors.append("A valid model ID is required.")
+        elif not self.is_valid_file_type(self.file.filename):
+            self.errors.append("Invalid file type. Allowed types: .jpg, .jpeg, .png.")
+
         return not bool(self.errors)
+
+    def is_valid_file_type(self, filename: str) -> bool:
+        """
+        Checks if the uploaded file has a valid image extension.
+
+        Parameters
+        ----------
+        filename : str
+            The filename of the uploaded file.
+
+        Returns
+        -------
+        bool
+            `True` if the file extension is valid, otherwise `False`.
+        """
+        allowed_extensions = {".jpg", ".jpeg", ".png"}
+        return any(filename.lower().endswith(ext) for ext in allowed_extensions)
