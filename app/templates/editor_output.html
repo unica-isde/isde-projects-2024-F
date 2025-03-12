@@ -28,7 +28,7 @@
                 <div class="card p-3">
                     <h5 class="text-left">Selected Image</h5>
                     <img class="large-front-thumbnail" id="selectedImage"
-                         src="{{ url_for('static', path='edited/' + image_id) }}"
+                         src="{{ image_path }}"
                          alt="{{ image_id }}"/>
                 </div>
                 <a class="btn btn-secondary mt-3" href="/editor" role="button">Back</a>

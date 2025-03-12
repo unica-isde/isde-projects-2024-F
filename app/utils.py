@@ -117,3 +117,30 @@ async def remove_file_after_time(file_path: str) -> None:
     if os.path.exists(file_path):
         os.remove(file_path)
         print(f"{file_path} deleted")
+
+
+def get_filename(image_path: str, filename: str) -> str:
+    """
+    Generates a unique filename by appending a counter if a file with the same name already exists.
+
+    Parameters
+    ----------
+    image_path : str
+        The directory where the file will be stored.
+    filename : str
+        The original filename.
+
+    Returns
+    -------
+    str
+        A unique filename with an incremented counter if necessary.
+    """
+    name, ext = os.path.splitext(filename)
+    file_counter = 1
+    unique_name = f"{name}{ext}"
+
+    while os.path.exists(os.path.join(image_path, unique_name)):
+        unique_name = f"{name}_{file_counter}{ext}"
+        file_counter += 1
+
+    return unique_name

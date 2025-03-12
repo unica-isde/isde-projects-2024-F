@@ -1,13 +1,12 @@
 import json
-from fastapi import FastAPI, Request, UploadFile, Form, File
+from fastapi import FastAPI, Request, UploadFile, File, BackgroundTasks
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from app.config import Configuration
 from app.forms.classification_form import EditedImageForm, UploadedImageForm
 from app.ml.classification_utils import classify_image, store_uploaded_image
-from app.utils import list_images, edit_image, remove_file_after_time
-from fastapi import BackgroundTasks
+from app.utils import list_images, edit_image, remove_file_after_time, get_filename
 import os
 
 app = FastAPI()
@@ -104,6 +103,8 @@ async def editor_post(request: Request, background_tasks: BackgroundTasks):
     ----------
     request : Request
         The HTTP request containing form data.
+    background_tasks : BackgroundTasks
+        A FastAPI background task manager for deferred file deletion.
 
     Returns
     -------
@@ -117,30 +118,48 @@ async def editor_post(request: Request, background_tasks: BackgroundTasks):
         return {"errors": form.errors}
 
     original_image_path = f"app/static/imagenet_subset/{form.image_id}"
-    edited_image_path = f"app/static/edited/edited_{form.image_id}"
 
-    edit_image(
-        original_image_path,
-        form.color_value,
-        form.brightness_value,
-        form.contrast_value,
-        form.sharpness_value,
-        edited_image_path
-    )
+    if any([form.color_value, form.brightness_value, form.contrast_value, form.sharpness_value]):
+        edited_image_directory = "app/static/edited/"
+        edited_image_name = get_filename(edited_image_directory, form.image_id)
+        edited_image_path = os.path.join(edited_image_directory, edited_image_name)
 
-    edited_image_id = f"edited_{form.image_id}"
-    classification_scores = classify_image(form.model_id, edited_image_id)
+        edit_image(
+            original_image_path,
+            form.color_value,
+            form.brightness_value,
+            form.contrast_value,
+            form.sharpness_value,
+            edited_image_path
+        )
 
-    background_tasks.add_task(remove_file_after_time, edited_image_path)
+        classification_scores = classify_image(model_id=form.model_id, img_id=edited_image_name)
 
-    return templates.TemplateResponse(
-        "editor_output.html",
-        {
-            "request": request,
-            "image_id": edited_image_id,
-            "classification_scores": json.dumps(classification_scores),
-        }
-    )
+        background_tasks.add_task(remove_file_after_time, edited_image_path)
+
+        return templates.TemplateResponse(
+            "editor_output.html",
+            {
+                "request": request,
+                "image_id": edited_image_name,
+                "image_path": f"/static/edited/{edited_image_name}",
+                "classification_scores": json.dumps(classification_scores),
+            },
+        )
+    else:
+        image_id = form.image_id
+        model_id = form.model_id
+        classification_scores = classify_image(model_id=model_id, img_id=image_id)
+
+        return templates.TemplateResponse(
+            "editor_output.html",
+            {
+                "request": request,
+                "image_id": image_id,
+                "image_path": f"/static/imagenet_subset/{image_id}",
+                "classification_scores": json.dumps(classification_scores),
+            },
+        )
 
 
 @app.get("/upload")
@@ -177,54 +196,81 @@ async def upload_post(request: Request, background_tasks: BackgroundTasks, file:
     """
     Handles image upload and classification.
 
-    This function processes an uploaded image, applies image transformations
-    (color, brightness, contrast, sharpness), classifies the image using a
-    selected model, and returns the classification results.
+    This function processes an uploaded image, applies optional image transformations
+    (color, brightness, contrast, sharpness), classifies the image using a selected model,
+    and returns the classification results.
 
     Parameters
     ----------
     request : Request
         The HTTP request containing form data.
+    background_tasks : BackgroundTasks
+        A FastAPI background task manager for deferred file deletion.
     file : UploadFile
         The image file uploaded by the user.
 
     Returns
     -------
     TemplateResponse
-        The rendered "classification_upload_output.html" page with classification results.
+        The rendered template displaying classification results.
     """
+
     form = UploadedImageForm(file=file, request=request)
     await form.load_data()
 
     if not form.is_valid():
         return {"errors": form.errors}
 
+    original_image_directory = "app/static/uploads/"
+    os.makedirs(original_image_directory, exist_ok=True)
+
     filename = store_uploaded_image(form.file)
+    original_image_path = os.path.join(original_image_directory, filename)
 
-    original_image_path = f"app/static/uploads/{filename}"
-    edited_image_path = f"app/static/edited/edited_{filename}"
+    if any([form.color_value, form.brightness_value, form.contrast_value, form.sharpness_value]):
+        edited_image_directory = "app/static/edited/"
+        os.makedirs(edited_image_directory, exist_ok=True)
 
-    edit_image(
-        original_image_path,
-        form.color_value,
-        form.brightness_value,
-        form.contrast_value,
-        form.sharpness_value,
-        edited_image_path
-    )
+        edited_image_name = get_filename(edited_image_directory, filename)
+        edited_image_path = os.path.join(edited_image_directory, edited_image_name)
 
-    os.remove(original_image_path)
-    edited_image_id = f"edited_{filename}"
-    classification_scores = classify_image(model_id=form.model_id, img_id=edited_image_id)
+        edit_image(
+            original_image_path,
+            form.color_value,
+            form.brightness_value,
+            form.contrast_value,
+            form.sharpness_value,
+            edited_image_path
+        )
 
-    background_tasks.add_task(remove_file_after_time, edited_image_path)
+        edited_image_name
+        classification_scores = classify_image(model_id=form.model_id, img_id=edited_image_name)
+
+        background_tasks.add_task(remove_file_after_time, original_image_path)
+        background_tasks.add_task(remove_file_after_time, edited_image_path)
+
+        return templates.TemplateResponse(
+            "classification_upload_output.html",
+            {
+                "request": request,
+                "image_id": edited_image_name,
+                "image_path": f"/static/edited/{edited_image_name}",
+                "classification_scores": json.dumps(classification_scores),
+            },
+        )
+
+    image_id = filename
+    model_id = form.model_id
+    classification_scores = classify_image(model_id=model_id, img_id=image_id)
+
+    background_tasks.add_task(remove_file_after_time, original_image_path)
 
     return templates.TemplateResponse(
         "classification_upload_output.html",
         {
             "request": request,
-            "image_id": filename,
-            "image_path": f"/static/uploads/{filename}",
+            "image_id": image_id,
+            "image_path": f"/static/uploads/{image_id}",
             "classification_scores": json.dumps(classification_scores),
         },
     )

@@ -8,6 +8,7 @@ import logging
 import os
 import torch
 from PIL import Image
+from app.utils import get_filename
 
 from torchvision import transforms
 from fastapi import UploadFile
@@ -61,10 +62,10 @@ def fetch_image(image_id: str) -> Image.Image:
 
 def store_uploaded_image(file: UploadFile) -> str:
     """
-    Saves an uploaded image to the designated upload folder.
+    Saves an uploaded image to the designated upload folder with a unique filename.
 
-    This function stores the uploaded image file in the upload directory
-    and returns the filename.
+    This function stores the uploaded image file in the upload directory,
+    ensuring the filename does not overwrite existing files.
 
     Parameters
     ----------
@@ -74,12 +75,18 @@ def store_uploaded_image(file: UploadFile) -> str:
     Returns
     -------
     str
-        The filename of the saved image.
+        The unique filename of the saved image.
     """
-    file_path = os.path.join(conf.upload_folder_path, file.filename)
+    upload_dir = conf.upload_folder_path
+    os.makedirs(upload_dir, exist_ok=True)
+
+    filename = get_filename(upload_dir, os.path.basename(file.filename))
+    file_path = os.path.join(upload_dir, filename)
+
     with open(file_path, "wb") as f:
         f.write(file.file.read())
-    return file.filename
+
+    return filename
 
 
 def get_labels() -> list:
